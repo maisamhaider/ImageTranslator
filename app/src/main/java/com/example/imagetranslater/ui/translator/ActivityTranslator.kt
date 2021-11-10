@@ -87,8 +87,6 @@ class ActivityTranslator : AppCompatActivity(), TranslatorCallBack {
                 funShare(textViewResult.text.toString())
             }
         }
-
-
     }
 
     override fun onResume() {
