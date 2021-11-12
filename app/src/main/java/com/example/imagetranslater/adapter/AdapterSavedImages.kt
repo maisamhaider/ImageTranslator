@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.imagetranslater.R
+import com.example.imagetranslater.interfaces.DeleteCallBack
 import com.example.imagetranslater.model.ModelSavedImages
 import com.example.imagetranslater.ui.ActivityViewImage
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.DATE
@@ -22,8 +23,10 @@ import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_TEXT
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.TARGET_LANGUAGE_CODE
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.TARGET_LANGUAGE_NAME
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.TEXT
+import com.example.imagetranslater.utils.Singleton.toastLong
 
-class AdapterSavedImages(val context: Context) : RecyclerView.Adapter<AdapterSavedImages.Holder>() {
+class AdapterSavedImages(val context: Context, private val callback: DeleteCallBack) :
+    RecyclerView.Adapter<AdapterSavedImages.Holder>() {
     private var list: MutableList<ModelSavedImages> = ArrayList()
     fun initList(list: MutableList<ModelSavedImages>) {
         this.list = list
@@ -31,6 +34,7 @@ class AdapterSavedImages(val context: Context) : RecyclerView.Adapter<AdapterSav
 
     class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.findViewById(R.id.imageView)
+        val imageViewDelete: ImageView = itemView.findViewById(R.id.imageViewDelete)
         val textViewTitle: TextView = itemView.findViewById(R.id.textViewTitle)
         val textViewTime: TextView = itemView.findViewById(R.id.textViewTime)
     }
@@ -63,6 +67,11 @@ class AdapterSavedImages(val context: Context) : RecyclerView.Adapter<AdapterSav
                 putExtra(TEXT, model.text)
                 putExtra(SOURCE_TEXT, model.sourceText)
             })
+
+            holder.imageViewDelete.setOnClickListener {
+                callback.call(model.id)
+                context.toastLong("clicked")
+            }
 
 
         }

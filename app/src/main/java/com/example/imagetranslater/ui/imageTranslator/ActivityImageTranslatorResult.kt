@@ -2,7 +2,9 @@ package com.example.imagetranslater.ui.imageTranslator
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.*
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -10,12 +12,12 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
@@ -24,21 +26,30 @@ import com.example.imagetranslater.api.OnlineTranslatorApi
 import com.example.imagetranslater.datasource.pinned.EntityPinned
 import com.example.imagetranslater.datasource.recent.EntityRecent
 import com.example.imagetranslater.interfaces.TranslatorCallBack
+import com.example.imagetranslater.ui.translator.ActivityTranslator
 import com.example.imagetranslater.utils.AnNot
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR
+import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_CODE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR
+import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_NAME_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR
+import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_CODE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR
+import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_NAME_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.imaeg.uri
 import com.example.imagetranslater.utils.AnNot.imaeg.vision
+import com.example.imagetranslater.utils.AppPreferences.funAddString
 import com.example.imagetranslater.utils.AppPreferences.funGetString
 import com.example.imagetranslater.utils.Singleton.funCopy
+import com.example.imagetranslater.utils.Singleton.shareWithText
+import com.example.imagetranslater.utils.Singleton.toastLong
 import com.example.imagetranslater.viewmodel.VMPinned
 import com.example.imagetranslater.viewmodel.VMRecent
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.otaliastudios.zoom.ZoomLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,23 +61,32 @@ import java.util.concurrent.Executors
 
 class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
 
+    lateinit var texViewCrop: TextView
+    lateinit var texViewTranslateTo: TextView
+    lateinit var texViewShowOriginalImage: TextView
+    lateinit var texViewShareImageWithTran: TextView
+    lateinit var viewMore: View
+    lateinit var zoomLayout: ZoomLayout
+    private lateinit var imageViewTranslate: ImageView
+    private lateinit var imageViewMore: ImageView
+    private lateinit var imageViewCrop: ImageView
     private lateinit var imageViewPin: ImageView
     private lateinit var imageView: ImageView
     private lateinit var imageView1: ImageView
-    private lateinit var btnCopy: Button
+    private lateinit var imageViewCopy: ImageView
     private lateinit var onlineTranslatorApi: OnlineTranslatorApi
-    private val textList: MutableList<String> = ArrayList()
     private var textList1: MutableList<String> = ArrayList()
     private val translatedList: MutableList<String> = ArrayList()
 
-    private val rSB = StringBuffer()
-    private val sSB = StringBuffer()
+    lateinit var rSB: StringBuilder
+    private lateinit var sSB: StringBuilder
     private var textImagePath = String()
     private var date = String()
 
     lateinit var vmPinned: VMPinned
     lateinit var vmRecent: VMRecent
     private lateinit var alertDialog: AlertDialog
+
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,21 +104,30 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
 
         onlineTranslatorApi = OnlineTranslatorApi(this)
 
+        viewMore = findViewById(R.id.viewMore)
+
+        texViewCrop = findViewById(R.id.texViewCrop)
+        texViewTranslateTo = findViewById(R.id.texViewTranslateTo)
+        texViewShowOriginalImage = findViewById(R.id.texViewShowOriginalImage)
+        texViewShareImageWithTran = findViewById(R.id.texViewShareImageWithTran)
+
+        zoomLayout = findViewById(R.id.zoomLayout)
+        imageViewTranslate = findViewById(R.id.imageViewTranslate)
         imageViewPin = findViewById(R.id.imageViewPin)
         imageView = findViewById(R.id.imageView)
         imageView1 = findViewById(R.id.imageView1)
-        btnCopy = findViewById(R.id.btnCopy)
-
-        Glide.with(this).load(uri).into(imageView1)
+        imageViewCopy = findViewById(R.id.imageViewCopy)
+        imageViewCrop = findViewById(R.id.imageViewCrop)
+        imageViewMore = findViewById(R.id.imageViewMore)
 
 
         imageViewPin.setOnClickListener {
             val sourceName = funGetString(
-                AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
+                SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
                 "English"
             )
             val targetName = funGetString(
-                AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
+                TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
                 "English"
             )
             val sourceCode = funGetString(
@@ -110,7 +139,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                 "en"
             )
             val pin = EntityPinned(
-                "Detected Language to $targetName",
+                "$sourceName to $targetName",
                 sSB.toString(),
                 rSB.toString(),
                 sourceName,
@@ -138,41 +167,107 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                 }
             }
         }
-        btnCopy.setOnClickListener {
+        imageViewCopy.setOnClickListener {
             funCopy(rSB.toString())
+            toastLong("copied")
+        }
+        imageViewCrop.setOnClickListener {
+            startActivity(Intent(this, ActivityCrop::class.java))
+        }
+        imageViewMore.setOnClickListener {
+            if (viewMore.isVisible) {
+                viewMore.visibility = View.GONE
+            } else {
+                viewMore.visibility = View.VISIBLE
+            }
+
+        }
+        viewMore.setOnClickListener {
+            viewMore.visibility = View.GONE
+        }
+        texViewCrop.setOnClickListener {
+            startActivity(Intent(this, ActivityCrop::class.java))
+        }
+        texViewTranslateTo.setOnClickListener {
+            toTranslateIntent()
+        }
+        texViewShowOriginalImage.setOnClickListener {
+            imageView.visibility = View.INVISIBLE
+        }
+        texViewShareImageWithTran.setOnClickListener {
+            imageView.visibility = View.VISIBLE
+            shareWithText(zoomLayout)
         }
 
-        imageView1.setOnClickListener {
-            if (imageView.isVisible) {
-                imageView.visibility = View.INVISIBLE
-            } else {
-                imageView.visibility = View.VISIBLE
 
-            }
+        imageViewTranslate.setOnClickListener {
+            toTranslateIntent()
+        }
+//
+//        zoomLayout.setOnClickListener {
+//            viewVisibility(imageView)
+//        }
+        imageView1.setOnClickListener {
+            viewVisibility(imageView)
         }
         imageView.setOnClickListener {
-            if (imageView.isVisible) {
-                imageView.visibility = View.INVISIBLE
-            } else {
-                imageView.visibility = View.VISIBLE
-
-            }
-        }
-        val v: Executor = Executors.newSingleThreadExecutor()
-        v.execute {
-            methTakeResult(uri)
+            viewVisibility(imageView)
         }
 
     }
 
+    private fun viewVisibility(view: View) {
+        if (view.isVisible) {
+            view.visibility = View.INVISIBLE
+        } else {
+            view.visibility = View.VISIBLE
+        }
+    }
 
-    private fun ocr(uri: Uri, text: Text): Bitmap {
+    private fun toTranslateIntent() {
+        startActivity(Intent(this, ActivityTranslator::class.java).apply {
+            putExtra(AnNot.ObjIntentKeys.SOURCE_TEXT, sSB.toString())
+            putExtra(AnNot.ObjIntentKeys.DATE, date)
+            putExtra(AnNot.ObjIntentKeys.TEXT, rSB.toString())
+        })
+        val sourceName = funGetString(
+            SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
+            "English"
+        )
+        val targetName = funGetString(
+            TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
+            "English"
+        )
+        val sourceCode = funGetString(
+            SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
+            "en"
+        )
+        val targetCODE = funGetString(
+            TARGET_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
+            "en"
+        )
+        funAddString(SOURCE_LANGUAGE_SELECTED_NAME_TRANSLATOR, sourceName)
+        funAddString(TARGET_LANGUAGE_SELECTED_NAME_TRANSLATOR, targetName)
+        funAddString(SOURCE_LANGUAGE_SELECTED_CODE_TRANSLATOR, sourceCode)
+        funAddString(TARGET_LANGUAGE_SELECTED_CODE_TRANSLATOR, targetCODE)
+    }
+
+
+    private fun ocr(text: Text): Bitmap {
+
+        val u: Uri = if (!uri.path!!.contains("file:///")) {
+            Uri.fromFile(File(uri.path.toString()))
+        } else {
+            uri
+        }
+//        val bMap = BitmapFactory.decodeFile(  )
+
         val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             ImageDecoder.decodeBitmap(
-                ImageDecoder.createSource(this.contentResolver, uri)
+                ImageDecoder.createSource(this.contentResolver, u)
             )
         } else {
-            MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
+            MediaStore.Images.Media.getBitmap(this.contentResolver, u)
         }
 
         val items: List<Text.TextBlock> = text.textBlocks
@@ -191,9 +286,11 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
         //because the API detects the position of Text on the View
         //So Dimesnions are important for Draw method to draw at that Text
         //Location
+
         val canvas: Canvas?
         val tempBitmap: Bitmap =
             Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+
         tempBitmap.setHasAlpha(true)
         tempBitmap.density = DisplayMetrics.DENSITY_HIGH
         canvas = Canvas(tempBitmap)
@@ -250,7 +347,8 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
         return tempBitmap
     }
 
-    private fun methTakeResult(image: Uri) {
+    private fun methTakeResult() {
+
         val source = funGetString(
             SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
             "en"
@@ -259,12 +357,23 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
             TARGET_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
             "en"
         )
-        uri = image
-        val image1 = InputImage.fromFilePath(this, image)
+        val u: Uri = if (!uri.path!!.contains("file:///")) {
+            Uri.fromFile(File(uri.path.toString()))
+        } else {
+            uri
+        }
+        Handler(Looper.getMainLooper()).post {
+//            imageView1.background
+            Glide.with(this).load(u).into(imageView1)
+//            imageView.background = uriToDrawable(u)
+            //            Glide.with(this).load(uriToDrawable(u)).into(imageView1)
+//            imageView.setImageBitmap(null)
+        }
+        val inputImage = InputImage.fromFilePath(this, u)
 
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
-        recognizer.process(image1)
+        recognizer.process(inputImage)
             .addOnSuccessListener { visionText ->
                 if (visionText.text.isNotBlank()) {
                     vision = visionText
@@ -278,31 +387,40 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                         blocks.add(myItem)
                     }
                     val sb = StringBuilder()
+                    sSB = StringBuilder()
+                    if (textList1.isNotEmpty()) {
+                        textList1.clear()
+                    }
                     blocks.forEach { textBlock ->
                         //loop Through each `Line`
                         textBlock.lines.forEach { currentLine ->
-                            textList.add(currentLine.text)
                             sSB.append(currentLine.text)
                             sb.append(currentLine.text + "///\n ")
-                            Log.e("Size", currentLine.text)
                         }
                     }
-                    Log.e("Size", "textList: ${textList.size}")
                     textList1.add(sb.toString())
-                    Log.e("Size", "textList1: ${textList1.size}")
-
 
                     onlineTranslatorApi.execute(textList1[0], source, target, this)
 
                 } else {
+                    toastLong("No text found")
+                    if (alertDialog.isShowing) {
+                        alertDialog.dismiss()
+                    }
                 }
 
-            }.addOnFailureListener { }
+            }.addOnFailureListener {
+                toastLong("Failed to recognized text")
+                if (alertDialog.isShowing) {
+                    alertDialog.dismiss()
+                }
+            }
     }
 
 
     override fun call(result: String, source: String) {
-        date = SimpleDateFormat("DD,MMM,yyyy h:mm am").format(System.currentTimeMillis())
+        date = SimpleDateFormat("dd,MMM,yyyy h:mm a").format(System.currentTimeMillis())
+        rSB = StringBuilder()
         if (translatedList.isNotEmpty()) translatedList.clear()
         if (result.isNotEmpty()) {
             val v: Executor = Executors.newSingleThreadExecutor()
@@ -312,17 +430,16 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
 
                 array.forEach {
                     rSB.append(it)
-                    Log.e("Size", it)
                     translatedList.add(it)
                 }
-                Log.e("Size", "translatedList: ${translatedList.size}")
 //
-                val bit = ocr(uri, vision)
-                saveImage(bit)
+                val bit = ocr(vision)
+                textImagePath = saveImage(bit)
 
                 handler.post {
-                    imageView.setImageBitmap(bit)
-//                imageView.setBackgroundColor(ContextCompat.getColor(this, R.color.black1))
+                    Glide.with(this).load(bit).into(imageView)
+
+                    //                imageView.setBackgroundColor(ContextCompat.getColor(this, R.color.black1))
                     val sourceName = funGetString(
                         SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
                         "English"
@@ -341,7 +458,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                     )
 
                     val entity = EntityRecent(
-                        "Detected Language to $targetName",
+                        "$sourceName to $targetName",
                         sSB.toString(),
                         rSB.toString(),
                         sourceName,
@@ -355,6 +472,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                     if (alertDialog.isShowing) {
                         alertDialog.dismiss()
                     }
+
                 }
             }
         }
@@ -363,28 +481,46 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
     override fun failure(messages: String) {
     }
 
-    private fun saveImage(bm: Bitmap) {
+    private fun saveImage(bm: Bitmap): String {
         val n = System.currentTimeMillis()
         val fName = "Image-$n.png"
         val file = File(getExternalFilesDir("")!!.absolutePath + fName)
         if (file.exists()) file.delete()
-        try {
+        return try {
             val out = FileOutputStream(file)
             bm.setHasAlpha(true)
             bm.compress(Bitmap.CompressFormat.PNG, 0, out)
             out.flush()
             out.close()
-            textImagePath = file.absolutePath
+            file.absolutePath
         } catch (e: Exception) {
             e.printStackTrace()
+            textImagePath
         }
     }
+
+    private fun uriToDrawable(uri: Uri): Drawable {
+
+        return try {
+            val inputStream = contentResolver.openInputStream(uri)
+            Drawable.createFromStream(inputStream, uri.toString())
+        } catch (e: Exception) {
+            ContextCompat.getDrawable(this, R.drawable.ic_launcher_background)!!
+        }
+    }
+
 
     private fun dialogLoading() {
         val builder = AlertDialog.Builder(this)
             .setTitle("Loading").setMessage("Wait a moment.Please").setCancelable(false)
         alertDialog = builder.create()
         alertDialog.show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val v: Executor = Executors.newSingleThreadExecutor()
+        v.execute { methTakeResult() }
     }
 
     override fun onDestroy() {

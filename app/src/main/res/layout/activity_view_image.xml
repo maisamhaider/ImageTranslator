@@ -2,40 +2,67 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.ActivityViewImage">
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/imageView1"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:scaleType="fitXY"
+
+    <com.otaliastudios.zoom.ZoomLayout
+        android:id="@+id/zoomLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:alignment="center"
+        app:animationDuration="280"
+        app:flingEnabled="true"
+
+        app:hasClickableChildren="false"
+        app:horizontalPanEnabled="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:maxZoom="2.5"
+        app:maxZoomType="zoom"
+        app:minZoom="0.7"
+        app:minZoomType="zoom"
+        app:oneFingerScrollEnabled="true"
+        app:overPinchable="true"
+        app:overScrollHorizontal="true"
+        app:overScrollVertical="true"
+        app:scrollEnabled="true"
+        app:threeFingersScrollEnabled="true"
+        app:transformation="centerInside"
+        app:transformationGravity="auto"
+        app:twoFingersScrollEnabled="true"
+        app:verticalPanEnabled="true"
+        app:zoomEnabled="true">
+
+        <include layout="@layout/layout_images" />
+
+    </com.otaliastudios.zoom.ZoomLayout>
+
+    <include
+        android:id="@+id/viewMore"
+        layout="@layout/layout_more"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline6" />
-
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/imageView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@android:color/transparent"
-        android:scaleType="fitXY"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/imageView1" />
-
-    <Button
-        android:id="@+id/btnCopy"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:text="copy"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imageViewCopy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_copy" />
 
 
     <androidx.appcompat.widget.AppCompatImageView
@@ -43,9 +70,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="10dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline6"
+        app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_translate" />
 
     <androidx.appcompat.widget.AppCompatImageView
@@ -55,42 +83,31 @@
         android:layout_margin="10dp"
         android:padding="10dp"
         app:layout_constraintStart_toEndOf="@+id/imageViewTranslate"
-        app:layout_constraintTop_toTopOf="@+id/guideline6"
+        app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_pin" />
 
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline2"
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imageViewMore"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.2" />
+        android:layout_margin="10dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageViewCopy"
+        app:srcCompat="@drawable/ic_more" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline3"
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imageViewDelete"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.7" />
+        android:layout_margin="20dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ic_delete" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.1" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.9" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.0" />
 </androidx.constraintlayout.widget.ConstraintLayout>

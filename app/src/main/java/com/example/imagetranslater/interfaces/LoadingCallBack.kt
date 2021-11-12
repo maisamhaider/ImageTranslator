@@ -1,4 +1,4 @@
-package com.example.speechtotexttranslator.interfeces
+package com.example.imagetranslater.interfaces
 
 interface LoadingCallBack {
     fun dialogDismiss(value: Boolean)

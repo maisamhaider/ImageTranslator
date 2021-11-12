@@ -18,6 +18,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonShare2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline11">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/textViewResult"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="5dp"
+            android:padding="5dp" />
+
+    </ScrollView>
+
     <TextView
         android:id="@+id/textViewTargetLang"
         android:layout_width="wrap_content"
@@ -39,29 +57,18 @@
         android:gravity="start|top"
         android:padding="5dp"
         app:layout_constraintBottom_toTopOf="@+id/guideline10"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonShare"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewSourceLang" />
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/textViewResult"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="5dp"
-        android:padding="5dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline11" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/imageButtonCopy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_copy"
-        app:layout_constraintEnd_toEndOf="@+id/editTextInput"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/editTextInput" />
 
     <androidx.appcompat.widget.AppCompatImageButton
@@ -69,7 +76,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_share"
-        app:layout_constraintEnd_toEndOf="@+id/editTextInput"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageButtonCopy" />
 
     <androidx.appcompat.widget.AppCompatImageButton
@@ -86,15 +93,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_copy"
-        app:layout_constraintEnd_toEndOf="@+id/textViewResult"
-        app:layout_constraintTop_toTopOf="@+id/textViewResult" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline11" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/imageButtonShare2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_share"
-        app:layout_constraintEnd_toEndOf="@+id/textViewResult"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageButtonCopy2" />
 
 

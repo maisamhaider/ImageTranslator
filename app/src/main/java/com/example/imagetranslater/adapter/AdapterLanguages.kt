@@ -8,11 +8,11 @@ import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.imagetranslater.R
 import com.example.imagetranslater.datasource.recentlanguages.EntityRecentLanguages
+import com.example.imagetranslater.interfaces.DeleteCallBack
 import com.example.imagetranslater.model.ModelLanguage
-import com.example.imagetranslater.viewmodel.ViewModelResultLanguages
 import com.example.imagetranslater.utils.AppPreferences.funAddString
 import com.example.imagetranslater.utils.AppPreferences.funGetString
-import com.example.speechtotexttranslator.interfeces.CallBack
+import com.example.imagetranslater.viewmodel.ViewModelResultLanguages
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.util.*
@@ -38,8 +38,8 @@ class AdapterLanguages(
 
     private var fullList: List<ModelLanguage>? = ArrayList(list)
 
-    private var callBack: CallBack? = null
-    fun funSetCallBack(callBack: CallBack) {
+    private var callBack: DeleteCallBack? = null
+    fun funSetCallBack(callBack: DeleteCallBack) {
         this.callBack = callBack
     }
 
@@ -62,7 +62,7 @@ class AdapterLanguages(
         )
 
         holder.itemView.setOnClickListener {
-            callBack!!.call(true)
+            callBack!!.call(position)
             //one name contains
             context.funAddString(recentLanguageKey, list[position].name!!)
             //

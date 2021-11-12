@@ -11,15 +11,15 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.imagetranslater.R
 import com.example.imagetranslater.datasource.recentlanguages.EntityRecentLanguages
+import com.example.imagetranslater.interfaces.DeleteCallBack
 import com.example.imagetranslater.utils.AppPreferences.funAddString
 import com.example.imagetranslater.viewmodel.ViewModelResultLanguages
-import com.example.speechtotexttranslator.interfeces.CallBack
 
 class AdapterRecentLanguages(
     var context: Context,
     private val viewModel: ViewModelResultLanguages,
     var selectedRecentLanguage: String,
-    var callBack: CallBack,
+    var callBack: DeleteCallBack,
     private var recentLanguageKey: String?,
     private var languageCodeKey: String?,
     private var languageNameKey: String?
@@ -72,7 +72,7 @@ class AdapterRecentLanguages(
 
             context.funAddString(languageCodeKey!!, getItem(position).code.toString())
             context.funAddString(languageNameKey!!, getItem(position).name.toString())
-            callBack.call(call = true)
+            callBack.call(id = position)
 
 
         }

@@ -2,10 +2,12 @@ package com.example.imagetranslater.ui
 
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.PointF
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -30,37 +32,88 @@ import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAG
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_NAME_TRANSLATOR
 import com.example.imagetranslater.utils.AppPreferences.funAddString
 import com.example.imagetranslater.utils.Singleton.funCopy
+import com.example.imagetranslater.utils.Singleton.shareWithText
 import com.example.imagetranslater.viewmodel.VMPinned
+import com.otaliastudios.zoom.ZoomLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
+
 
 class ActivityViewImage : AppCompatActivity() {
+
+    lateinit var texViewCrop: TextView
+    lateinit var texViewTranslateTo: TextView
+    lateinit var texViewShowOriginalImage: TextView
+    lateinit var texViewShareImageWithTran: TextView
+    lateinit var viewMore: View
+    lateinit var zoomLayout: ZoomLayout
+    private lateinit var imageViewMore: ImageView
+    lateinit var imageViewDelete: ImageView
+
+
     private lateinit var imageViewPin: ImageView
     private lateinit var imageView: ImageView
     private lateinit var imageView1: ImageView
     private lateinit var imageViewTranslate: ImageView
-    private lateinit var btnCopy: Button
+    private lateinit var imageViewCopy: ImageView
+
+    var matrix: Matrix = Matrix()
+    var savedMatrix: Matrix = Matrix()
+
+    // We can be in one of these 3 states
+    val NONE = 0
+    val DRAG = 1
+    val ZOOM = 2
+    var mode = NONE
+
+    // Remember some things for zooming
+    var start = PointF()
+    var mid = PointF()
+    var oldDist = 1f
+    var savedItemClicked: String? = null
+
+    lateinit var imageOriginal: String
+    lateinit var imageResult: String
+    lateinit var sourceText: String
+    lateinit var text: String
+    lateinit var sourceLanguageCode: String
+    lateinit var targetLanguageCode: String
+    lateinit var sourceLanguageName: String
+    lateinit var targetLanguageName: String
+    lateinit var date: String
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_view_image)
+        imageViewDelete = findViewById(R.id.imageViewDelete)
         imageViewPin = findViewById(R.id.imageViewPin)
         imageView = findViewById(R.id.imageView)
         imageView1 = findViewById(R.id.imageView1)
         imageViewTranslate = findViewById(R.id.imageViewTranslate)
-        btnCopy = findViewById(R.id.btnCopy)
+        imageViewCopy = findViewById(R.id.imageViewCopy)
+        imageViewMore = findViewById(R.id.imageViewMore)
+
+        zoomLayout = findViewById(R.id.zoomLayout)
+        viewMore = findViewById(R.id.viewMore)
+
+        texViewCrop = findViewById(R.id.texViewCrop)
+        texViewTranslateTo = findViewById(R.id.texViewTranslateTo)
+        texViewShowOriginalImage = findViewById(R.id.texViewShowOriginalImage)
+        texViewShareImageWithTran = findViewById(R.id.texViewShareImageWithTran)
 
         val id = intent.extras!![ID].toString().toInt()
-        val imageOriginal = intent.extras!![IMAGE_ORIGINAL].toString()
-        val imageResult = intent.extras!![IMAGE_RESULT].toString()
-        val sourceText = intent.extras!![SOURCE_TEXT].toString()
-        val text = intent.extras!![TEXT].toString()
-        val sourceLanguageCode = intent.extras!![SOURCE_LANGUAGE_NAME].toString()
-        val targetLanguageCode = intent.extras!![TARGET_LANGUAGE_NAME].toString()
-        val sourceLanguageName = intent.extras!![SOURCE_LANGUAGE_CODE].toString()
-        val targetLanguageName = intent.extras!![TARGET_LANGUAGE_CODE].toString()
-        val date = intent.extras!![DATE].toString()
+        imageOriginal = intent.extras!![IMAGE_ORIGINAL].toString()
+        imageResult = intent.extras!![IMAGE_RESULT].toString()
+        sourceText = intent.extras!![SOURCE_TEXT].toString()
+        text = intent.extras!![TEXT].toString()
+        sourceLanguageCode = intent.extras!![SOURCE_LANGUAGE_NAME].toString()
+        targetLanguageCode = intent.extras!![TARGET_LANGUAGE_NAME].toString()
+        sourceLanguageName = intent.extras!![SOURCE_LANGUAGE_CODE].toString()
+        targetLanguageName = intent.extras!![TARGET_LANGUAGE_CODE].toString()
+        date = intent.extras!![DATE].toString()
 
         Glide.with(this).load(imageOriginal).into(imageView1)
         Glide.with(this).load(imageResult).into(imageView)
@@ -73,13 +126,13 @@ class ActivityViewImage : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             if (vmPinned.entriesCount(text) > 0) {
                 launch(Dispatchers.Main) {
-                    imageViewPin.setBackgroundColor(Color.BLUE)
+                    imageViewPin.setBackgroundColor(Color.GREEN)
                 }
             }
         }
         imageViewPin.setOnClickListener {
             val pin = EntityPinned(
-                "Detected Language to $targetLanguageName",
+                "$sourceLanguageName to $targetLanguageName",
                 sourceText,
                 text,
                 sourceLanguageCode,
@@ -93,7 +146,10 @@ class ActivityViewImage : AppCompatActivity() {
             CoroutineScope(Dispatchers.IO).launch {
                 if (vmPinned.entriesCount(text) > 0) {
                     vmPinned.funDelete(imagePath = imageResult)
-                    finish()
+                    launch(Dispatchers.Main) {
+                        imageViewPin.setBackgroundColor(Color.TRANSPARENT)
+                    }
+
                 } else {
                     vmPinned.funInsert(pin)
                     launch(Dispatchers.Main) {
@@ -110,38 +166,74 @@ class ActivityViewImage : AppCompatActivity() {
         }
 
 
-        btnCopy.setOnClickListener {
+        imageViewCopy.setOnClickListener {
             funCopy(text)
         }
+        imageViewMore.setOnClickListener {
+            if (viewMore.isVisible) {
+                viewMore.visibility = View.GONE
+            } else {
+                viewMore.visibility = View.VISIBLE
+            }
 
+        }
+        viewMore.setOnClickListener {
+            viewMore.visibility = View.GONE
+        }
+        texViewCrop.visibility = View.GONE
+        texViewShowOriginalImage.visibility = View.GONE
+
+        texViewTranslateTo.setOnClickListener {
+            toTranslateIntent()
+        }
         imageViewTranslate.setOnClickListener {
-            startActivity(Intent(this, ActivityTranslator::class.java).apply {
-                putExtra(SOURCE_TEXT, sourceText)
-                putExtra(DATE, date)
-                putExtra(TEXT, text)
-            })
-
-            funAddString(SOURCE_LANGUAGE_SELECTED_NAME_TRANSLATOR, sourceLanguageName)
-            funAddString(TARGET_LANGUAGE_SELECTED_NAME_TRANSLATOR, targetLanguageName)
-            funAddString(SOURCE_LANGUAGE_SELECTED_CODE_TRANSLATOR, sourceLanguageCode)
-            funAddString(TARGET_LANGUAGE_SELECTED_CODE_TRANSLATOR, targetLanguageCode)
+            toTranslateIntent()
         }
 
+        texViewShareImageWithTran.setOnClickListener {
+            shareWithText(zoomLayout)
+        }
         imageView1.setOnClickListener {
-            if (imageView.isVisible) {
-                imageView.visibility = View.INVISIBLE
-            } else {
-                imageView.visibility = View.VISIBLE
-            }
+            viewVisibility(imageView)
         }
         imageView.setOnClickListener {
-            if (imageView.isVisible) {
-                imageView.visibility = View.INVISIBLE
-            } else {
-                imageView.visibility = View.VISIBLE
-
+            viewVisibility(imageView)
+        }
+        imageViewDelete.setOnClickListener {
+//            File(imageOriginal).delete()
+            val file = File(imageOriginal)
+            file.delete()
+            if (file.exists()) {
+                file.canonicalFile.delete()
+                if (file.exists()) {
+                    applicationContext.deleteFile(file.name)
+                }
             }
+            finish()
+        }
+
+    }
+
+    private fun viewVisibility(view: View) {
+        if (view.isVisible) {
+            view.visibility = View.INVISIBLE
+        } else {
+            view.visibility = View.VISIBLE
         }
     }
+
+    private fun toTranslateIntent() {
+        startActivity(Intent(this, ActivityTranslator::class.java).apply {
+            putExtra(SOURCE_TEXT, sourceText)
+            putExtra(DATE, date)
+            putExtra(TEXT, text)
+        })
+
+        funAddString(SOURCE_LANGUAGE_SELECTED_NAME_TRANSLATOR, sourceLanguageName)
+        funAddString(TARGET_LANGUAGE_SELECTED_NAME_TRANSLATOR, targetLanguageName)
+        funAddString(SOURCE_LANGUAGE_SELECTED_CODE_TRANSLATOR, sourceLanguageCode)
+        funAddString(TARGET_LANGUAGE_SELECTED_CODE_TRANSLATOR, targetLanguageCode)
+    }
+
 
 }

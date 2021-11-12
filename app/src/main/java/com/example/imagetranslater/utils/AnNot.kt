@@ -1,7 +1,7 @@
 package com.example.imagetranslater.utils
 
 import android.content.Context
-import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.Telephony
 import com.example.imagetranslater.model.ModelLanguage
@@ -15,7 +15,11 @@ annotation class AnNot {
     object imaeg {
 
         lateinit var uri: Uri
+        lateinit var bitmap: Bitmap
         lateinit var vision: Text
+
+        var cropClick = false
+
     }
 
     object ObjRoomItems {
@@ -307,14 +311,6 @@ annotation class AnNot {
             "Yoruba",
             "Zulu"
         )
-
-        fun Context.funShare(text: String) {
-            val intentShare = Intent()
-            intentShare.action = Intent.ACTION_SEND
-            intentShare.type = "text/plain"
-            intentShare.putExtra(Intent.EXTRA_TEXT, text)
-            startActivity(intentShare)
-        }
 
         fun funGetLanguagesListOffline(): MutableList<ModelLanguage> {
             var model: ModelLanguage?

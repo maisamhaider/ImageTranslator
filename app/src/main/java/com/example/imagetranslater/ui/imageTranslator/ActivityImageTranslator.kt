@@ -84,13 +84,13 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
         // Set up the listener for take photo button
         textViewCapture.setOnClickListener {
             toastLong("Wait a mom ent")
-             takePhoto()
+            takePhoto()
         }
 
         textViewOpenGallery!!.setOnClickListener {
             val photoPickerIntent = Intent(Intent.ACTION_PICK)
             photoPickerIntent.type = "image/*"
-             intentLauncher.launch(photoPickerIntent)
+            intentLauncher.launch(photoPickerIntent)
         }
 
         textViewSourceLang!!.setOnClickListener {
@@ -206,7 +206,7 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
                     cameraSelector,
                     imageCapture,
                     preview
-                ).cameraControl.setLinearZoom(0.4f)
+                )/*.cameraControl.setLinearZoom(0.4f)*/
 
             } catch (exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
@@ -222,7 +222,7 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
     }
 
     private fun getOutputDirectory(): File {
-        val mediaDir = externalMediaDirs.firstOrNull()?.let {
+        val mediaDir = getExternalFilesDirs(null).firstOrNull()?.let {
             File(it, resources.getString(R.string.app_name)).apply { mkdirs() }
         }
         return if (mediaDir != null && mediaDir.exists())

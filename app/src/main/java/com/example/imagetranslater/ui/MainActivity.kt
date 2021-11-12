@@ -1,10 +1,14 @@
 package com.example.imagetranslater.ui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.imagetranslater.R
@@ -43,7 +47,6 @@ class MainActivity : AppCompatActivity() {
 
     private val intentLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-
             if (result.resultCode == RESULT_OK && result.data!!.data != null) {
                 val chosenImage = result.data!!.data
                 uri = chosenImage!!
@@ -77,8 +80,40 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun showPermissionDialog() {
+
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ),
+            333
+        )
+
+    }
+
+
+    private fun checkPermission(): Boolean {
+
+        val write = ContextCompat.checkSelfPermission(
+            applicationContext,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        val read = ContextCompat.checkSelfPermission(
+            applicationContext,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        )
+        return write == PackageManager.PERMISSION_GRANTED &&
+                read == PackageManager.PERMISSION_GRANTED
+
+    }
+
     override fun onResume() {
         super.onResume()
+//        if (!checkPermission()) {
+//            showPermissionDialog()
+//        }
         loadDataInRecyclerViews()
     }
 }

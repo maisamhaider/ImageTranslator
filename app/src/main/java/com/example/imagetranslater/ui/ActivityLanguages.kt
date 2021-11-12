@@ -6,6 +6,11 @@ import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.imagetranslater.R
+import com.example.imagetranslater.adapter.AdapterLanguages
+import com.example.imagetranslater.adapter.AdapterRecentLanguages
+import com.example.imagetranslater.interfaces.DeleteCallBack
+import com.example.imagetranslater.interfaces.LoadingCallBack
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.LANGUAGE_CAMERA_SUPPORTED
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.LANGUAGE_ONLINE
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_LANGUAGE_LIST
@@ -18,16 +23,11 @@ import com.example.imagetranslater.utils.AnNot.ObjLists.funGetLanguagesListCamer
 import com.example.imagetranslater.utils.AnNot.ObjLists.funGetLanguagesListOffline
 import com.example.imagetranslater.utils.AnNot.ObjLists.funGetLanguagesListOnline
 import com.example.imagetranslater.utils.AppPreferences.funGetString
-import com.example.imagetranslater.R
 import com.example.imagetranslater.utils.Singleton.toastLong
-import com.example.imagetranslater.adapter.AdapterLanguages
-import com.example.imagetranslater.adapter.AdapterRecentLanguages
 import com.example.imagetranslater.viewmodel.ViewModelResultLanguages
-import com.example.speechtotexttranslator.interfeces.CallBack
-import com.example.speechtotexttranslator.interfeces.LoadingCallBack
 
 
-class ActivityLanguages : AppCompatActivity(), CallBack, LoadingCallBack {
+class ActivityLanguages : AppCompatActivity(), DeleteCallBack, LoadingCallBack {
     private var sourceLanguagesList: String? = null
     private var recentLanguagesCodeList: String? = null
     private var recentLanguagesKey: String? = null
@@ -168,7 +168,7 @@ class ActivityLanguages : AppCompatActivity(), CallBack, LoadingCallBack {
     }
 
 
-    override fun call(call: Boolean?) {
+    override fun call(id: Int) {
         finish()
     }
 
