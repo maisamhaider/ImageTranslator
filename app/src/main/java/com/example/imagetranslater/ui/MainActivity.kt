@@ -6,15 +6,16 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.imagetranslater.R
 import com.example.imagetranslater.adapter.ViewPagerAdapter
 import com.example.imagetranslater.ui.imageTranslator.ActivityImageTranslator
 import com.example.imagetranslater.ui.imageTranslator.ActivityImageTranslatorResult
+import com.example.imagetranslater.utils.AnNot.imaeg.FROM_GALLERY
 import com.example.imagetranslater.utils.AnNot.imaeg.uri
 import com.example.imagetranslater.viewmodel.VMPinned
 import com.example.imagetranslater.viewmodel.VMRecent
@@ -26,6 +27,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tableLayout: TabLayout
     lateinit var viewPager: ViewPager2
+    private val vmRecent: VMRecent by viewModels()
+    private val vmPinned: VMPinned by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -42,7 +46,6 @@ class MainActivity : AppCompatActivity() {
             intentLauncher.launch(photoPickerIntent)
         }
 
-
     }
 
     private val intentLauncher =
@@ -50,6 +53,7 @@ class MainActivity : AppCompatActivity() {
             if (result.resultCode == RESULT_OK && result.data!!.data != null) {
                 val chosenImage = result.data!!.data
                 uri = chosenImage!!
+                FROM_GALLERY = true
                 startActivity(Intent(this, ActivityImageTranslatorResult::class.java))
             } else {
             }
@@ -57,17 +61,6 @@ class MainActivity : AppCompatActivity() {
         }
 
     private fun loadDataInRecyclerViews() {
-
-        val vmRecent: VMRecent = ViewModelProvider(
-            this,
-            ViewModelProvider.AndroidViewModelFactory.getInstance(application)
-        )[VMRecent::class.java]
-
-
-        val vmPinned: VMPinned = ViewModelProvider(
-            this,
-            ViewModelProvider.AndroidViewModelFactory.getInstance(application)
-        )[VMPinned::class.java]
 
         viewPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
 
@@ -115,5 +108,6 @@ class MainActivity : AppCompatActivity() {
 //            showPermissionDialog()
 //        }
         loadDataInRecyclerViews()
+
     }
 }

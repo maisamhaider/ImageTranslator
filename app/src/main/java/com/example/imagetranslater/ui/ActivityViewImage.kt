@@ -1,19 +1,21 @@
 package com.example.imagetranslater.ui
 
+import android.content.ContentResolver
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.Matrix
-import android.graphics.PointF
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.example.imagetranslater.R
+import com.example.imagetranslater.databinding.ActivityViewImageBinding
 import com.example.imagetranslater.datasource.pinned.EntityPinned
 import com.example.imagetranslater.ui.translator.ActivityTranslator
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.DATE
@@ -30,21 +32,28 @@ import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAG
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_NAME_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_CODE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_NAME_TRANSLATOR
+import com.example.imagetranslater.utils.AnNot.ObjRoomItems.RECENT
+import com.example.imagetranslater.utils.AnNot.ObjRoomItems.TYPE
 import com.example.imagetranslater.utils.AppPreferences.funAddString
 import com.example.imagetranslater.utils.Singleton.funCopy
 import com.example.imagetranslater.utils.Singleton.shareWithText
+import com.example.imagetranslater.utils.Singleton.toastShort
 import com.example.imagetranslater.viewmodel.VMPinned
+import com.example.imagetranslater.viewmodel.VMRecent
+import com.google.android.material.imageview.ShapeableImageView
 import com.otaliastudios.zoom.ZoomLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.IOException
 
 
 class ActivityViewImage : AppCompatActivity() {
 
+    private lateinit var imageViewVisibility: ShapeableImageView
     lateinit var texViewCrop: TextView
-    lateinit var texViewTranslateTo: TextView
+    private lateinit var texViewTranslateTo: TextView
     lateinit var texViewShowOriginalImage: TextView
     lateinit var texViewShareImageWithTran: TextView
     lateinit var viewMore: View
@@ -59,21 +68,6 @@ class ActivityViewImage : AppCompatActivity() {
     private lateinit var imageViewTranslate: ImageView
     private lateinit var imageViewCopy: ImageView
 
-    var matrix: Matrix = Matrix()
-    var savedMatrix: Matrix = Matrix()
-
-    // We can be in one of these 3 states
-    val NONE = 0
-    val DRAG = 1
-    val ZOOM = 2
-    var mode = NONE
-
-    // Remember some things for zooming
-    var start = PointF()
-    var mid = PointF()
-    var oldDist = 1f
-    var savedItemClicked: String? = null
-
     lateinit var imageOriginal: String
     lateinit var imageResult: String
     lateinit var sourceText: String
@@ -84,10 +78,12 @@ class ActivityViewImage : AppCompatActivity() {
     lateinit var targetLanguageName: String
     lateinit var date: String
 
+    lateinit var binding: ActivityViewImageBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_view_image)
+//        binding = ActivityViewImageBinding.bind(R.layout.activity_view_image)
         imageViewDelete = findViewById(R.id.imageViewDelete)
         imageViewPin = findViewById(R.id.imageViewPin)
         imageView = findViewById(R.id.imageView)
@@ -99,11 +95,13 @@ class ActivityViewImage : AppCompatActivity() {
         zoomLayout = findViewById(R.id.zoomLayout)
         viewMore = findViewById(R.id.viewMore)
 
+        imageViewVisibility = findViewById(R.id.imageViewVisibility)
         texViewCrop = findViewById(R.id.texViewCrop)
         texViewTranslateTo = findViewById(R.id.texViewTranslateTo)
         texViewShowOriginalImage = findViewById(R.id.texViewShowOriginalImage)
         texViewShareImageWithTran = findViewById(R.id.texViewShareImageWithTran)
 
+        val type = intent.extras!![TYPE].toString()
         val id = intent.extras!![ID].toString().toInt()
         imageOriginal = intent.extras!![IMAGE_ORIGINAL].toString()
         imageResult = intent.extras!![IMAGE_RESULT].toString()
@@ -118,10 +116,8 @@ class ActivityViewImage : AppCompatActivity() {
         Glide.with(this).load(imageOriginal).into(imageView1)
         Glide.with(this).load(imageResult).into(imageView)
 
-        val vmPinned = ViewModelProvider(
-            this,
-            ViewModelProvider.AndroidViewModelFactory.getInstance(application)
-        )[VMPinned::class.java]
+        val vmRecent: VMRecent by viewModels()
+        val vmPinned: VMPinned by viewModels()
 
         CoroutineScope(Dispatchers.IO).launch {
             if (vmPinned.entriesCount(text) > 0) {
@@ -193,22 +189,51 @@ class ActivityViewImage : AppCompatActivity() {
         texViewShareImageWithTran.setOnClickListener {
             shareWithText(zoomLayout)
         }
-        imageView1.setOnClickListener {
-            viewVisibility(imageView)
+
+        imageView.setOnClickListener { viewVisibility(imageView) }
+        imageView1.setOnClickListener { viewVisibility(imageView) }
+
+        imageViewVisibility.setOnClickListener {
+            if (imageView.isVisible) {
+                imageView.visibility = View.INVISIBLE
+                imageViewVisibility.setImageResource(R.drawable.ic_visible)
+            } else {
+                imageView.visibility = View.VISIBLE
+                imageViewVisibility.setImageResource(R.drawable.ic_visibility_off)
+            }
         }
-        imageView.setOnClickListener {
-            viewVisibility(imageView)
-        }
+
         imageViewDelete.setOnClickListener {
 //            File(imageOriginal).delete()
-            val file = File(imageOriginal)
-            file.delete()
-            if (file.exists()) {
-                file.canonicalFile.delete()
-                if (file.exists()) {
-                    applicationContext.deleteFile(file.name)
-                }
+            if (type == RECENT) {
+                vmRecent.funDelete(id)
+            } else {
+                vmPinned.funDelete(id)
             }
+            val file = File(imageOriginal)
+            if (!file.delete()) {
+                toastShort("not deleted")
+                if (file.exists()) {
+                    if (!file.canonicalFile.delete()) {
+                        toastShort("not deleted")
+                        if (file.exists()) {
+                            if (!applicationContext.deleteFile(file.name)) {
+                                toastShort("not deleted")
+                            } else {
+                                toastShort("deleted3 : $imageOriginal")
+                            }
+                        }
+                    } else {
+                        toastShort("deleted2 : $imageOriginal")
+                    }
+                }
+            } else {
+                toastShort("deleted1 : $imageOriginal")
+            }
+
+            deleteFileFromMediaStore(contentResolver, file)
+
+
             finish()
         }
 
@@ -235,5 +260,29 @@ class ActivityViewImage : AppCompatActivity() {
         funAddString(TARGET_LANGUAGE_SELECTED_CODE_TRANSLATOR, targetLanguageCode)
     }
 
+    private fun deleteFileFromMediaStore(contentResolver: ContentResolver, file: File) {
+        val sdk = Build.VERSION.SDK_INT
+        if (sdk >= Build.VERSION_CODES.HONEYCOMB) {
+            val canonicalPath: String = try {
+                file.canonicalPath
+            } catch (e: IOException) {
+                file.absolutePath
+            }
+            val uri = MediaStore.Files.getContentUri("external")
+            val result = contentResolver.delete(
+                uri,
+                MediaStore.Files.FileColumns.DATA + "=?", arrayOf(canonicalPath)
+            )
+            if (result == 0) {
+                val absolutePath = file.absolutePath
+                if (absolutePath != canonicalPath) {
+                    contentResolver.delete(
+                        uri,
+                        MediaStore.Files.FileColumns.DATA + "=?", arrayOf(absolutePath)
+                    )
+                }
+            }
+        }
+    }
 
 }

@@ -17,6 +17,7 @@ annotation class AnNot {
         lateinit var uri: Uri
         lateinit var bitmap: Bitmap
         lateinit var vision: Text
+        var FROM_GALLERY = false
 
         var cropClick = false
 
@@ -24,8 +25,12 @@ annotation class AnNot {
 
     object ObjRoomItems {
         const val TABLE_PINNED = "TABLE_PINNED"
+        const val PINNED = "PINNED"
+        const val RECENT = "RECENT"
         const val TABLE_RECENT = "TABLE_RECENT"
         const val TABLE_RECENT_LANGUAGES = "TABLE_RECENT_LANGUAGES"
+        const val TYPE = "TYPE"
+
     }
 
     object ObjIntentKeys {

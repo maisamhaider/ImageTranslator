@@ -4,11 +4,9 @@ package com.example.imagetranslater.adapter
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE
 import androidx.recyclerview.widget.RecyclerView
@@ -16,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.example.imagetranslater.R
 import com.example.imagetranslater.interfaces.DeleteCallBack
 import com.example.imagetranslater.model.ModelSavedImages
+import com.example.imagetranslater.utils.AnNot.ObjRoomItems.PINNED
+import com.example.imagetranslater.utils.AnNot.ObjRoomItems.RECENT
 import com.example.imagetranslater.utils.Singleton.toastLong
 import com.example.imagetranslater.viewmodel.VMPinned
 import com.example.imagetranslater.viewmodel.VMRecent
@@ -61,7 +61,6 @@ class ViewPagerAdapter(
     }
 
     private fun enableSwiping(recyclerView: RecyclerView) {
-        val background = ColorDrawable(ContextCompat.getColor(context, R.color.teal_700))
 
         val mIth = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             0,
@@ -134,7 +133,13 @@ class ViewPagerAdapter(
     }
 
     private fun loadDataInRecyclerViews(isRecent: Boolean, recyclerView: RecyclerView): Boolean {
-        val adapter = AdapterSavedImages(context = context, this)
+        val adapter = AdapterSavedImages(
+            context = context, this, if (isRecent) {
+                RECENT
+            } else {
+                PINNED
+            }
+        )
         val scope = CoroutineScope(Dispatchers.IO)
         if (isRecent) {
             scope.launch {

@@ -23,9 +23,10 @@ import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_TEXT
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.TARGET_LANGUAGE_CODE
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.TARGET_LANGUAGE_NAME
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.TEXT
+import com.example.imagetranslater.utils.AnNot.ObjRoomItems.TYPE
 import com.example.imagetranslater.utils.Singleton.toastLong
 
-class AdapterSavedImages(val context: Context, private val callback: DeleteCallBack) :
+class AdapterSavedImages(val context: Context, private val callback: DeleteCallBack,val tabType: String) :
     RecyclerView.Adapter<AdapterSavedImages.Holder>() {
     private var list: MutableList<ModelSavedImages> = ArrayList()
     fun initList(list: MutableList<ModelSavedImages>) {
@@ -66,6 +67,7 @@ class AdapterSavedImages(val context: Context, private val callback: DeleteCallB
                 putExtra(DATE, model.date)
                 putExtra(TEXT, model.text)
                 putExtra(SOURCE_TEXT, model.sourceText)
+                putExtra(TYPE,tabType)
             })
 
             holder.imageViewDelete.setOnClickListener {

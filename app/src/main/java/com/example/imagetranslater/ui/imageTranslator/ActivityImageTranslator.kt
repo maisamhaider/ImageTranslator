@@ -32,6 +32,7 @@ import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAG
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGES_CODE_CAMERA_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGES_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR
+import com.example.imagetranslater.utils.AnNot.imaeg.FROM_GALLERY
 import com.example.imagetranslater.utils.AnNot.imaeg.uri
 import com.example.imagetranslater.utils.AppPreferences.funGetString
 import com.example.imagetranslater.utils.Singleton.funLaunchLanguagesActivity
@@ -123,6 +124,8 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
             if (result.resultCode == RESULT_OK && result.data!!.data != null) {
                 val chosenImage = result.data!!.data
                 uri = chosenImage!!
+                FROM_GALLERY = true
+
 //                methTakeResult(chosenImage!!)
                 startActivity(
                     Intent(
@@ -169,7 +172,6 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
                     )
                     Log.e(TAG, msg)
                 }
-
             })
     }
 

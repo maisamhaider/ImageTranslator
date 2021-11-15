@@ -53,7 +53,9 @@ object Singleton : TextToSpeech.OnInitListener {
         intentShare.action = Intent.ACTION_SEND
         intentShare.type = "text/plain"
         intentShare.putExtra(Intent.EXTRA_TEXT, text)
-        startActivity(intentShare)
+        startActivity(Intent.createChooser(intentShare, "Share"));
+
+//        startActivity(intentShare)
     }
 
 
