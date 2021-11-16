@@ -7,12 +7,11 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.databinding.DataBindingUtil
 import com.bumptech.glide.Glide
 import com.example.imagetranslater.R
 import com.example.imagetranslater.databinding.ActivityViewImageBinding
@@ -40,8 +39,6 @@ import com.example.imagetranslater.utils.Singleton.shareWithText
 import com.example.imagetranslater.utils.Singleton.toastShort
 import com.example.imagetranslater.viewmodel.VMPinned
 import com.example.imagetranslater.viewmodel.VMRecent
-import com.google.android.material.imageview.ShapeableImageView
-import com.otaliastudios.zoom.ZoomLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,24 +47,6 @@ import java.io.IOException
 
 
 class ActivityViewImage : AppCompatActivity() {
-
-    private lateinit var imageViewVisibility: ShapeableImageView
-    lateinit var texViewCrop: TextView
-    private lateinit var texViewTranslateTo: TextView
-    lateinit var texViewShowOriginalImage: TextView
-    lateinit var texViewShareImageWithTran: TextView
-    lateinit var viewMore: View
-    lateinit var zoomLayout: ZoomLayout
-    private lateinit var imageViewMore: ImageView
-    lateinit var imageViewDelete: ImageView
-
-
-    private lateinit var imageViewPin: ImageView
-    private lateinit var imageView: ImageView
-    private lateinit var imageView1: ImageView
-    private lateinit var imageViewTranslate: ImageView
-    private lateinit var imageViewCopy: ImageView
-
     lateinit var imageOriginal: String
     lateinit var imageResult: String
     lateinit var sourceText: String
@@ -82,24 +61,8 @@ class ActivityViewImage : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_view_image)
-//        binding = ActivityViewImageBinding.bind(R.layout.activity_view_image)
-        imageViewDelete = findViewById(R.id.imageViewDelete)
-        imageViewPin = findViewById(R.id.imageViewPin)
-        imageView = findViewById(R.id.imageView)
-        imageView1 = findViewById(R.id.imageView1)
-        imageViewTranslate = findViewById(R.id.imageViewTranslate)
-        imageViewCopy = findViewById(R.id.imageViewCopy)
-        imageViewMore = findViewById(R.id.imageViewMore)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_view_image)
 
-        zoomLayout = findViewById(R.id.zoomLayout)
-        viewMore = findViewById(R.id.viewMore)
-
-        imageViewVisibility = findViewById(R.id.imageViewVisibility)
-        texViewCrop = findViewById(R.id.texViewCrop)
-        texViewTranslateTo = findViewById(R.id.texViewTranslateTo)
-        texViewShowOriginalImage = findViewById(R.id.texViewShowOriginalImage)
-        texViewShareImageWithTran = findViewById(R.id.texViewShareImageWithTran)
 
         val type = intent.extras!![TYPE].toString()
         val id = intent.extras!![ID].toString().toInt()
@@ -113,8 +76,8 @@ class ActivityViewImage : AppCompatActivity() {
         targetLanguageName = intent.extras!![TARGET_LANGUAGE_CODE].toString()
         date = intent.extras!![DATE].toString()
 
-        Glide.with(this).load(imageOriginal).into(imageView1)
-        Glide.with(this).load(imageResult).into(imageView)
+        Glide.with(this).load(imageOriginal).into(binding.includedImages.imageView1)
+        Glide.with(this).load(imageResult).into(binding.includedImages.imageView)
 
         val vmRecent: VMRecent by viewModels()
         val vmPinned: VMPinned by viewModels()
@@ -122,11 +85,11 @@ class ActivityViewImage : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             if (vmPinned.entriesCount(text) > 0) {
                 launch(Dispatchers.Main) {
-                    imageViewPin.setBackgroundColor(Color.GREEN)
+                    binding.imageViewPin.setBackgroundColor(Color.GREEN)
                 }
             }
         }
-        imageViewPin.setOnClickListener {
+        binding.imageViewPin.setOnClickListener {
             val pin = EntityPinned(
                 "$sourceLanguageName to $targetLanguageName",
                 sourceText,
@@ -143,7 +106,7 @@ class ActivityViewImage : AppCompatActivity() {
                 if (vmPinned.entriesCount(text) > 0) {
                     vmPinned.funDelete(imagePath = imageResult)
                     launch(Dispatchers.Main) {
-                        imageViewPin.setBackgroundColor(Color.TRANSPARENT)
+                        binding.imageViewPin.setBackgroundColor(Color.TRANSPARENT)
                     }
 
                 } else {
@@ -154,7 +117,7 @@ class ActivityViewImage : AppCompatActivity() {
                             "inserted",
                             Toast.LENGTH_SHORT
                         ).show()
-                        imageViewPin.setBackgroundColor(Color.GREEN)
+                        binding.imageViewPin.setBackgroundColor(Color.GREEN)
                     }
                 }
 
@@ -162,48 +125,50 @@ class ActivityViewImage : AppCompatActivity() {
         }
 
 
-        imageViewCopy.setOnClickListener {
+        binding.imageViewCopy.setOnClickListener {
             funCopy(text)
         }
-        imageViewMore.setOnClickListener {
-            if (viewMore.isVisible) {
-                viewMore.visibility = View.GONE
+        binding.imageViewMore.setOnClickListener {
+            if (binding.viewMore.clMore.isVisible) {
+                binding.viewMore.clMore.visibility = View.GONE
             } else {
-                viewMore.visibility = View.VISIBLE
+                binding.viewMore.clMore.visibility = View.VISIBLE
             }
 
         }
-        viewMore.setOnClickListener {
-            viewMore.visibility = View.GONE
+        binding.viewMore.clMore.setOnClickListener {
+            binding.viewMore.clMore.visibility = View.GONE
         }
-        texViewCrop.visibility = View.GONE
-        texViewShowOriginalImage.visibility = View.GONE
+        binding.viewMore.texViewCrop.visibility = View.GONE
+        binding.viewMore.texViewShowOriginalImage.visibility = View.GONE
 
-        texViewTranslateTo.setOnClickListener {
+        binding.viewMore.texViewTranslateTo.setOnClickListener {
             toTranslateIntent()
         }
-        imageViewTranslate.setOnClickListener {
+        binding.imageViewTranslate.setOnClickListener {
             toTranslateIntent()
         }
 
-        texViewShareImageWithTran.setOnClickListener {
-            shareWithText(zoomLayout)
+        binding.viewMore.texViewShareImageWithTran.setOnClickListener {
+            binding.includedImages.imageView.visibility = View.VISIBLE
+            shareWithText(binding.zoomLayout)
         }
 
-        imageView.setOnClickListener { viewVisibility(imageView) }
-        imageView1.setOnClickListener { viewVisibility(imageView) }
+        binding.includedImages.imageView.setOnClickListener { viewVisibility(binding.includedImages.imageView) }
+        binding.includedImages.imageView1.setOnClickListener { viewVisibility(binding.includedImages.imageView) }
 
-        imageViewVisibility.setOnClickListener {
-            if (imageView.isVisible) {
-                imageView.visibility = View.INVISIBLE
-                imageViewVisibility.setImageResource(R.drawable.ic_visible)
+        binding.imageViewVisibility.setOnClickListener {
+            if (binding.includedImages.imageView.isVisible) {
+                binding.includedImages.imageView.visibility = View.INVISIBLE
+
+                binding.imageViewVisibility.setImageResource(R.drawable.ic_visible)
             } else {
-                imageView.visibility = View.VISIBLE
-                imageViewVisibility.setImageResource(R.drawable.ic_visibility_off)
+                binding.includedImages.imageView.visibility = View.VISIBLE
+                binding.imageViewVisibility.setImageResource(R.drawable.ic_visibility_off)
             }
         }
 
-        imageViewDelete.setOnClickListener {
+        binding.imageViewDelete.setOnClickListener {
 //            File(imageOriginal).delete()
             if (type == RECENT) {
                 vmRecent.funDelete(id)

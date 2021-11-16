@@ -66,8 +66,7 @@ class AdapterRecentLanguages(
         holder.checkbox.isChecked = item.name.equals(selectedRecentLanguage)
 
         holder.itemView.setOnClickListener {
-//            val code = item[position].code.toString()
-//            val name = item[position].toString()
+
             context.funAddString(recentLanguageKey!!, getItem(position).name.toString())
 
             context.funAddString(languageCodeKey!!, getItem(position).code.toString())

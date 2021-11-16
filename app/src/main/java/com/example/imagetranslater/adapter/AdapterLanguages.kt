@@ -21,8 +21,6 @@ class AdapterLanguages(
     var context: Context,
     val viewModel: ViewModelResultLanguages,
     private val list: MutableList<ModelLanguage>,
-    private var recentLanguagesCodeList: String,
-    private var recentLanguagesKey: String,
     private var recentLanguageKey: String,
     private var languageCodeKey: String?,
     private var languageNameKey: String?
@@ -32,6 +30,7 @@ class AdapterLanguages(
         val imageViewFlag: ImageView = itemView.findViewById(R.id.imageViewFlag)
         val textViewLanguageName: TextView = itemView.findViewById(R.id.textViewLanguageName)
         val checkbox: CheckBox = itemView.findViewById(R.id.checkbox)
+
 
     }
 

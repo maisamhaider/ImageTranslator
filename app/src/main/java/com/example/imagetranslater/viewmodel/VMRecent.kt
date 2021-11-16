@@ -12,8 +12,8 @@ class VMRecent(application: Application) : AndroidViewModel(application) {
     private val repositoryRecent = RepositoryRecent(application)
 //    var results: LiveData<List<EntityRecent>> = repositoryRecent.results
 
-    fun funInsert(result: EntityRecent) {
-        repositoryRecent.funInsert(result);
+    suspend fun funInsert(result: EntityRecent) {
+        repositoryRecent.funInsert(result)
     }
 
     fun funDelete(result: EntityRecent) {
@@ -33,7 +33,7 @@ class VMRecent(application: Application) : AndroidViewModel(application) {
 //        return repositoryRecent.funGetAll()
 //    }
 
-    suspend fun funGetAll():  List<EntityRecent> {
+    suspend fun funGetAll(): List<EntityRecent> {
         return repositoryRecent.funGetAll()
     }
 

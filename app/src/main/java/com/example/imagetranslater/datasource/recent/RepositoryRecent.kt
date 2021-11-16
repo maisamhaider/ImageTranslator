@@ -24,8 +24,8 @@ class RepositoryRecent(application: Application) {
         daoRecent.entriesCount()
     }
 
-    fun funInsert(result: EntityRecent) {
-        Insert(result, daoRecent)
+    suspend fun funInsert(result: EntityRecent) = withContext(Dispatchers.IO) {
+        daoRecent.insert(result)
     }
 
     fun funDelete(result: EntityRecent) {
@@ -40,29 +40,6 @@ class RepositoryRecent(application: Application) {
         DeleteAll(daoRecent)
     }
 
-    internal class Insert(result: EntityRecent, dao: DaoRecent) : Runnable {
-        // to stop the thread
-        private var exit: Boolean
-        var t: Thread = Thread(this)
-        private var result: EntityRecent
-        private var dao: DaoRecent
-
-        override fun run() {
-            dao.insert(result)
-        }
-
-        // for stopping the thread
-        fun stop() {
-            exit = true
-        }
-
-        init {
-            exit = false
-            this.result = result
-            this.dao = dao
-            t.start() // Starting the thread
-        }
-    }
 
     internal class Delete(result: EntityRecent, dao: DaoRecent) : Runnable {
         // to stop the thread

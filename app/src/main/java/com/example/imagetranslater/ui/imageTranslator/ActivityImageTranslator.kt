@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
@@ -14,23 +13,22 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.LifecycleOwner
 import com.example.imagetranslater.R
+import com.example.imagetranslater.databinding.ActivityImageTranslatorBinding
 import com.example.imagetranslater.ui.ActivityLanguages
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.LANGUAGE_CAMERA_SUPPORTED
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.LANGUAGE_ONLINE
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR
-import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_RECENT_LANGUAGES_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR
-import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGES_CODE_CAMERA_TRANSLATOR
-import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGES_IMAGE_TRANSLATOR
+import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.imaeg.FROM_GALLERY
 import com.example.imagetranslater.utils.AnNot.imaeg.uri
@@ -45,14 +43,12 @@ import java.util.concurrent.Executors
 
 
 class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
-    private var viewFinder: PreviewView? = null
     private var imageCapture: ImageCapture? = null
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
 
-    private var textViewSourceLang: TextView? = null
-    private var textViewTargetLang: TextView? = null
-    var textViewOpenGallery: TextView? = null
+
+    private lateinit var binding: ActivityImageTranslatorBinding
 
     companion object {
         private const val TAG = "CameraXBasic"
@@ -63,13 +59,8 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_image_translator)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_image_translator)
 
-        val textViewCapture = findViewById<TextView>(R.id.textViewCapture)
-        viewFinder = findViewById(R.id.viewFinder)
-        textViewSourceLang = findViewById(R.id.textViewSourceLang)
-        textViewTargetLang = findViewById(R.id.textViewTargetLang)
-        textViewOpenGallery = findViewById(R.id.textViewOpenGallery)
 
         // Request camera permissions
         if (allPermissionsGranted()) {
@@ -83,34 +74,32 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
         // Set up the listener for take photo button
-        textViewCapture.setOnClickListener {
-            toastLong("Wait a mom ent")
+
+        binding.textViewCapture.setOnClickListener {
+            toastLong("Wait a moment")
             takePhoto()
         }
 
-        textViewOpenGallery!!.setOnClickListener {
+        binding.textViewOpenGallery.setOnClickListener {
             val photoPickerIntent = Intent(Intent.ACTION_PICK)
             photoPickerIntent.type = "image/*"
             intentLauncher.launch(photoPickerIntent)
         }
-
-        textViewSourceLang!!.setOnClickListener {
+        binding.textViewSourceLang.setOnClickListener {
             funLaunchLanguagesActivity(
                 LANGUAGE_CAMERA_SUPPORTED,
                 SOURCE_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR,
-                SOURCE_RECENT_LANGUAGES_IMAGE_TRANSLATOR,
-                SOURCE_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR,
+                 SOURCE_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR,
                 SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
                 SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
                 ActivityLanguages()
             )
         }
-        textViewTargetLang!!.setOnClickListener {
+        binding.textViewTargetLang.setOnClickListener {
             funLaunchLanguagesActivity(
                 LANGUAGE_ONLINE,
-                TARGET_RECENT_LANGUAGES_CODE_CAMERA_TRANSLATOR,
-                TARGET_RECENT_LANGUAGES_IMAGE_TRANSLATOR,
-                TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR,
+                TARGET_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR,
+                 TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR,
                 TARGET_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
                 TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
                 ActivityLanguages()
@@ -191,7 +180,7 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
             val preview = Preview.Builder()
                 .build()
                 .also {
-                    it.setSurfaceProvider(viewFinder!!.surfaceProvider)
+                    it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
                 }
 
             // Select back camera as a default
@@ -245,40 +234,15 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
         }
     }
 
-//    private fun methTakeResult(image: Uri) {
-//        AnNot.imaeg.uri = image
-//        val image = InputImage.fromFilePath(this, image)
-//
-//        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-//
-//        val result = recognizer.process(image)
-//            .addOnSuccessListener { visionText ->
-//                if (visionText.text.isNotBlank()) {
-//                    AnNot.imaeg.vision = visionText
-//                    startActivity(
-//                        Intent(
-//                            this, ActivityImageTranslatorResult::class.java
-//                        ).apply {
-//                            putExtra(
-//                                AnNot.ObjIntentKeys.TEXT_SOURCE,
-//                                visionText.text
-//                            )
-//                        })
-//                } else {
-//                }
-//                finish()
-//
-//            }.addOnFailureListener { e -> }
-//    }
 
 
     override fun onResume() {
         super.onResume()
-        textViewSourceLang!!.text = funGetString(
+        binding.textViewSourceLang.text = funGetString(
             SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
             "English"
         )
-        textViewTargetLang!!.text = funGetString(
+        binding.textViewTargetLang.text = funGetString(
             TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
             "English"
         )

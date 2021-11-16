@@ -1,14 +1,15 @@
 package com.example.imagetranslater.ui
 
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.lifecycle.ViewModelProvider
+import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.imagetranslater.R
 import com.example.imagetranslater.adapter.AdapterLanguages
 import com.example.imagetranslater.adapter.AdapterRecentLanguages
+import com.example.imagetranslater.databinding.ActivityLanguagesBinding
 import com.example.imagetranslater.interfaces.DeleteCallBack
 import com.example.imagetranslater.interfaces.LoadingCallBack
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.LANGUAGE_CAMERA_SUPPORTED
@@ -17,8 +18,6 @@ import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_LANGUAGE_LIS
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.WHICH_LANGUAGE_CODE
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.WHICH_LANGUAGE_NAME
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.WHICH_RECENT_LANGUAGE
-import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.WHICH_RECENT_LANGUAGE_CODE_LIST
-import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.WHICH_RECENT_LANGUAGE_LIST
 import com.example.imagetranslater.utils.AnNot.ObjLists.funGetLanguagesListCameraSupported
 import com.example.imagetranslater.utils.AnNot.ObjLists.funGetLanguagesListOffline
 import com.example.imagetranslater.utils.AnNot.ObjLists.funGetLanguagesListOnline
@@ -29,33 +28,21 @@ import com.example.imagetranslater.viewmodel.ViewModelResultLanguages
 
 class ActivityLanguages : AppCompatActivity(), DeleteCallBack, LoadingCallBack {
     private var sourceLanguagesList: String? = null
-    private var recentLanguagesCodeList: String? = null
-    private var recentLanguagesKey: String? = null
     private var recentLanguageKey: String? = null
     private var languageCodeKey: String? = null
     private var languageNameKey: String? = null
-    lateinit var viewView: ViewModelResultLanguages
+    private val viewView: ViewModelResultLanguages by viewModels()
+
+    lateinit var binding: ActivityLanguagesBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_languages)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_languages)
         funRunCode()
     }
 
     private fun funRunCode() {
-        //class object
-//        viewView = ViewModelProvider(
-//            this,
-//            ViewModelProvider.AndroidViewModelFactory.getInstance(application)
-//        )[ViewModelResultLanguages::class.java]
-        viewView = ViewModelProvider(
-            this,
-            ViewModelProvider.AndroidViewModelFactory.getInstance(application)
-        )[ViewModelResultLanguages::class.java]
-
         sourceLanguagesList = intent.getStringExtra(SOURCE_LANGUAGE_LIST)
-        recentLanguagesCodeList = intent.getStringExtra(WHICH_RECENT_LANGUAGE_CODE_LIST)
-        recentLanguagesKey = intent.getStringExtra(WHICH_RECENT_LANGUAGE_LIST)!!
         recentLanguageKey = intent.getStringExtra(WHICH_RECENT_LANGUAGE)!!
         languageCodeKey = intent.getStringExtra(WHICH_LANGUAGE_CODE)!!
         languageNameKey = intent.getStringExtra(WHICH_LANGUAGE_NAME)!!
@@ -63,16 +50,11 @@ class ActivityLanguages : AppCompatActivity(), DeleteCallBack, LoadingCallBack {
         funLoadLanguagesInRecyclerView(
             viewView,
             sourceLanguagesList!!,
-            recentLanguagesCodeList!!,
-            recentLanguagesKey!!,
             recentLanguageKey!!,
             languageCodeKey,
             languageNameKey
         )
         funRecentLanguagesInRecyclerView(
-            sourceLanguagesList!!,
-            recentLanguagesCodeList!!,
-            recentLanguagesKey,
             recentLanguageKey,
             languageCodeKey,
             languageNameKey
@@ -82,16 +64,12 @@ class ActivityLanguages : AppCompatActivity(), DeleteCallBack, LoadingCallBack {
     private fun funLoadLanguagesInRecyclerView(
         viewModel: ViewModelResultLanguages,
         sourceLanguagesList: String,
-        recentLanguagesCodeList: String,
-        recentLanguagesKey: String,
         recentLanguageKey: String,
         sourceLanguageCodeKey: String?,
         targetLanguageNameKey: String?
     ) {
-        val recyclerViewLanguages: RecyclerView = findViewById(R.id.recyclerViewAllLanguages)
-        val searchViewLanguage: SearchView = findViewById(R.id.searchViewLanguage)
         val lm = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        recyclerViewLanguages.layoutManager = lm
+        binding.includedAllLang.recyclerViewAllLanguages.layoutManager = lm
 
 
         val adapterLanguages = AdapterLanguages(
@@ -108,17 +86,15 @@ class ActivityLanguages : AppCompatActivity(), DeleteCallBack, LoadingCallBack {
                     funGetLanguagesListOffline()
                 }
             },
-            recentLanguagesCodeList,
-            recentLanguagesKey,
             recentLanguageKey,
             sourceLanguageCodeKey,
             targetLanguageNameKey
         )
 
-        recyclerViewLanguages.adapter = adapterLanguages
+        binding.includedAllLang.recyclerViewAllLanguages.adapter = adapterLanguages
         adapterLanguages.funSetCallBack(this)
 
-        searchViewLanguage.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        binding.searchViewLanguage.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 return false
             }
@@ -131,15 +107,11 @@ class ActivityLanguages : AppCompatActivity(), DeleteCallBack, LoadingCallBack {
     }
 
     private fun funRecentLanguagesInRecyclerView(
-        sourceLanguagesList: String,
-        recentLanguagesCodeList: String,
-        recentLanguagesKey: String?,
         recentLanguageKey: String?,
         languageCodeKey: String?,
         languageNameKey: String?
     ) {
 
-        val recyclerView: RecyclerView = findViewById(R.id.recyclerViewRecentLanguages)
         val lm = LinearLayoutManager(this)
         lm.orientation = LinearLayoutManager.VERTICAL
 
@@ -163,8 +135,8 @@ class ActivityLanguages : AppCompatActivity(), DeleteCallBack, LoadingCallBack {
             }
         })
 
-        recyclerView.layoutManager = lm
-        recyclerView.adapter = adapterLanguages
+        binding.includedRecentLang.recyclerViewRecentLanguages.layoutManager = lm
+        binding.includedRecentLang.recyclerViewRecentLanguages.adapter = adapterLanguages
     }
 
 

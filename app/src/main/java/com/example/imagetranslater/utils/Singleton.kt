@@ -143,7 +143,6 @@ object Singleton : TextToSpeech.OnInitListener {
     fun Context.funLaunchLanguagesActivity(
         sourceLanguagesList: String,
         recentLanguagesCodeList: String,
-        recentLanguagesKey: String,
         recentLanguageKey: String,
         sourceLanguageCodeKey: String?,
         targetLanguageNameKey: String?,
@@ -154,20 +153,16 @@ object Singleton : TextToSpeech.OnInitListener {
             AnNot.ObjIntentKeys.WHICH_RECENT_LANGUAGE_CODE_LIST,
             recentLanguagesCodeList
         )
-        intent.putExtra(AnNot.ObjIntentKeys.WHICH_LANGUAGE_CODE, sourceLanguageCodeKey)
+
         intent.putExtra(AnNot.ObjIntentKeys.WHICH_LANGUAGE_CODE, sourceLanguageCodeKey)
         intent.putExtra(AnNot.ObjIntentKeys.WHICH_LANGUAGE_NAME, targetLanguageNameKey)
         intent.putExtra(AnNot.ObjIntentKeys.WHICH_RECENT_LANGUAGE, recentLanguageKey)
-        intent.putExtra(AnNot.ObjIntentKeys.WHICH_RECENT_LANGUAGE_LIST, recentLanguagesKey)
         intent.putExtra(AnNot.ObjIntentKeys.SOURCE_LANGUAGE_LIST, sourceLanguagesList)
         startActivity(intent)
     }
 
     override fun onInit(p0: Int) {
     }
-
-
-
 
 
 }

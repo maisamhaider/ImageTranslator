@@ -43,7 +43,9 @@
             app:verticalPanEnabled="true"
             app:zoomEnabled="true">
 
-            <include layout="@layout/layout_images" />
+            <include
+                android:id="@+id/includedImages"
+                layout="@layout/layout_images" />
 
 
         </com.otaliastudios.zoom.ZoomLayout>

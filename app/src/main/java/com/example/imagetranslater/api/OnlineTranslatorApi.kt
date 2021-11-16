@@ -1,8 +1,6 @@
 package com.example.imagetranslater.api
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import com.example.imagetranslater.interfaces.TranslatorCallBack
 import cz.msebera.android.httpclient.HttpResponse
 import cz.msebera.android.httpclient.StatusLine
@@ -10,22 +8,22 @@ import cz.msebera.android.httpclient.client.HttpClient
 import cz.msebera.android.httpclient.client.methods.HttpGet
 import cz.msebera.android.httpclient.client.methods.HttpUriRequest
 import cz.msebera.android.httpclient.impl.client.HttpClientBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.io.ByteArrayOutputStream
 import java.net.URLEncoder
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 
 
 class OnlineTranslatorApi(val context: Context) {
 
-    fun execute(
+    suspend fun execute(
         text: String, sourceCode: String, targetCode: String,
         translatorCallBack: TranslatorCallBack
     ) {
-        val executor: Executor = Executors.newSingleThreadExecutor()
 
-        executor.execute {
+        withContext(Dispatchers.IO) {
             try {
                 val encoded: String = URLEncoder.encode(text, "utf-8")
                 val stringBuilder = StringBuilder()
@@ -56,19 +54,22 @@ class OnlineTranslatorApi(val context: Context) {
                         sb2.append(jSONArray2[0].toString())
                         result = sb2.toString()
                     }
-                    Handler(Looper.getMainLooper()).post {
+
+                    launch(Dispatchers.Main) {
                         translatorCallBack.call(result, text)
                     }
 
+
                 } else {
-                    Handler(Looper.getMainLooper()).post {
+                    launch(Dispatchers.Main) {
                         translatorCallBack.failure(statusLine.reasonPhrase)
                     }
+
                 }
                 response.entity.content.close()
 
             } catch (e: Exception) {
-                Handler(Looper.getMainLooper()).post {
+                launch(Dispatchers.Main) {
                     translatorCallBack.failure(e.message.toString())
                 }
             }
