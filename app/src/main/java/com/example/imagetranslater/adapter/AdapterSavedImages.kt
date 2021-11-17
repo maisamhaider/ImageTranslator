@@ -17,6 +17,7 @@ import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.DATE
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.ID
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.IMAGE_ORIGINAL
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.IMAGE_RESULT
+import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SHARE_IMAGE_RESULT
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_LANGUAGE_CODE
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_LANGUAGE_NAME
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_TEXT
@@ -26,7 +27,11 @@ import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.TEXT
 import com.example.imagetranslater.utils.AnNot.ObjRoomItems.TYPE
 import com.example.imagetranslater.utils.Singleton.toastLong
 
-class AdapterSavedImages(val context: Context, private val callback: DeleteCallBack,val tabType: String) :
+class AdapterSavedImages(
+    val context: Context,
+    private val callback: DeleteCallBack,
+    val tabType: String
+) :
     RecyclerView.Adapter<AdapterSavedImages.Holder>() {
     private var list: MutableList<ModelSavedImages> = ArrayList()
     fun initList(list: MutableList<ModelSavedImages>) {
@@ -60,6 +65,7 @@ class AdapterSavedImages(val context: Context, private val callback: DeleteCallB
                 putExtra(ID, model.id)
                 putExtra(IMAGE_ORIGINAL, model.imagePath)
                 putExtra(IMAGE_RESULT, model.textImagePath)
+                putExtra(SHARE_IMAGE_RESULT, model.shareImagePath)
                 putExtra(SOURCE_LANGUAGE_NAME, model.sourceName)
                 putExtra(TARGET_LANGUAGE_NAME, model.targetName)
                 putExtra(SOURCE_LANGUAGE_CODE, model.sourceCode)
@@ -67,7 +73,7 @@ class AdapterSavedImages(val context: Context, private val callback: DeleteCallB
                 putExtra(DATE, model.date)
                 putExtra(TEXT, model.text)
                 putExtra(SOURCE_TEXT, model.sourceText)
-                putExtra(TYPE,tabType)
+                putExtra(TYPE, tabType)
             })
 
             holder.imageViewDelete.setOnClickListener {

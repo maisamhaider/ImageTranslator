@@ -13,7 +13,7 @@ import com.example.imagetranslater.datasource.recentlanguages.EntityRecentLangua
 
 @Database(
     entities = [EntityRecentLanguages::class, EntityRecent::class,
-        EntityPinned::class], version = 1, exportSchema = false
+        EntityPinned::class], version = 2, exportSchema = false
 )
 abstract class MyRoom : RoomDatabase() {
     abstract fun daoRecentLanguages(): DaoRecentLanguages?

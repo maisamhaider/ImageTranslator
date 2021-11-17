@@ -158,6 +158,7 @@ class ViewPagerAdapter(
                             recent.targetLanguageCode!!,
                             recent.imagePath!!,
                             recent.textImagePath!!,
+                            recent.shareImagePath!!,
                             recent.date!!
                         )
                     list.add(model)
@@ -186,6 +187,7 @@ class ViewPagerAdapter(
                             recent.targetLanguageCode!!,
                             recent.imagePath!!,
                             recent.textImagePath!!,
+                            recent.shareImagePath!!,
                             recent.date!!
                         )
                     list.add(model)

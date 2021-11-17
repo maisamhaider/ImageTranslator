@@ -16,6 +16,7 @@ class EntityRecent(
     targetLanguageName: String,
     imagePath: String,
     textImagePath: String,
+    shareImagePath: String,
     date: String,
 ) {
     @PrimaryKey(autoGenerate = true)
@@ -48,6 +49,9 @@ class EntityRecent(
 
     @ColumnInfo(name = "textImagePath")
     var textImagePath: String? = textImagePath
+
+    @ColumnInfo(name = "shareImagePath")
+    var shareImagePath: String? = shareImagePath
 
     @ColumnInfo(name = "date")
     var date: String? = date

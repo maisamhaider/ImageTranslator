@@ -6,12 +6,13 @@ import android.content.ClipData
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.Context.CLIPBOARD_SERVICE
 import android.graphics.Bitmap
-import android.net.Uri
 import android.speech.tts.TextToSpeech
 import android.view.View
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import androidx.core.view.drawToBitmap
 import java.io.*
+import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -59,30 +60,45 @@ object Singleton : TextToSpeech.OnInitListener {
     }
 
 
-    fun Context.shareWithText(view: View) {
-        val bitmap = view.drawToBitmap()
+    fun Context.shareWithText(image: String) {
+        val share = Intent()
+        share.action = Intent.ACTION_SEND
+        share.type = "image/*"
 
-        val n = System.currentTimeMillis()
-        val fName = "Image-$n.png"
-        val file = File(getExternalFilesDir("")!!.absolutePath + fName)
+        val photoURI = FileProvider.getUriForFile(
+            this,
+            "$packageName.provider",
+            File(image)
+        )
+        share.putExtra(Intent.EXTRA_STREAM, photoURI)
+//        share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        startActivity(Intent.createChooser(share, "Share Image using"))
+
+    }
+
+    fun Context.createImage(view: View): String {
+        val bitmap = view.drawToBitmap()
+        val time = SimpleDateFormat(
+            "EEE-dd-yyyy h:mm s am",
+            Locale.getDefault()
+        ).format(System.currentTimeMillis())
+
+        val dir = getExternalFilesDir("Share_folder")!!.absolutePath
+        val file = File(dir, "share$time.png")
         if (file.exists()) file.delete()
-        try {
+        return try {
             val out = FileOutputStream(file)
             bitmap.setHasAlpha(true)
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0, out)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
             out.flush()
             out.close()
 
-            val share = Intent(Intent.ACTION_SEND)
-            share.type = "image/*"
-
-            share.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.absolutePath))
-            startActivity(Intent.createChooser(share, "Share image using"));
-//            file.delete()
+            file.absolutePath
         } catch (e: Exception) {
             e.printStackTrace()
+            file.absolutePath
         }
-
 
     }
 

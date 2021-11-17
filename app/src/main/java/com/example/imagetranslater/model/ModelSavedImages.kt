@@ -12,5 +12,6 @@ data class ModelSavedImages(
     val targetCODE: String,
     val imagePath: String,
     val textImagePath: String,
+    val shareImagePath: String,
     val date: String,
 )

@@ -20,6 +20,9 @@ import androidx.lifecycle.LifecycleOwner
 import com.example.imagetranslater.R
 import com.example.imagetranslater.databinding.ActivityImageTranslatorBinding
 import com.example.imagetranslater.ui.ActivityLanguages
+import com.example.imagetranslater.utils.AnNot.Image.FROM_GALLERY
+import com.example.imagetranslater.utils.AnNot.Image.translate
+import com.example.imagetranslater.utils.AnNot.Image.uri
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.LANGUAGE_CAMERA_SUPPORTED
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.LANGUAGE_ONLINE
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR
@@ -30,8 +33,6 @@ import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAG
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR
-import com.example.imagetranslater.utils.AnNot.imaeg.FROM_GALLERY
-import com.example.imagetranslater.utils.AnNot.imaeg.uri
 import com.example.imagetranslater.utils.AppPreferences.funGetString
 import com.example.imagetranslater.utils.Singleton.funLaunchLanguagesActivity
 import com.example.imagetranslater.utils.Singleton.toastLong
@@ -61,7 +62,6 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_image_translator)
 
-
         // Request camera permissions
         if (allPermissionsGranted()) {
             startCamera()
@@ -89,7 +89,7 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
             funLaunchLanguagesActivity(
                 LANGUAGE_CAMERA_SUPPORTED,
                 SOURCE_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR,
-                 SOURCE_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR,
+                SOURCE_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR,
                 SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
                 SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
                 ActivityLanguages()
@@ -99,7 +99,7 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
             funLaunchLanguagesActivity(
                 LANGUAGE_ONLINE,
                 TARGET_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR,
-                 TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR,
+                TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR,
                 TARGET_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
                 TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
                 ActivityLanguages()
@@ -197,7 +197,7 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
                     cameraSelector,
                     imageCapture,
                     preview
-                )/*.cameraControl.setLinearZoom(0.4f)*/
+                )
 
             } catch (exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
@@ -214,7 +214,7 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
 
     private fun getOutputDirectory(): File {
         val mediaDir = getExternalFilesDirs(null).firstOrNull()?.let {
-            File(it, resources.getString(R.string.app_name)).apply { mkdirs() }
+            File(it, "original").apply { mkdirs() }
         }
         return if (mediaDir != null && mediaDir.exists())
             mediaDir else filesDir
@@ -235,7 +235,6 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
     }
 
 
-
     override fun onResume() {
         super.onResume()
         binding.textViewSourceLang.text = funGetString(
@@ -246,7 +245,7 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
             TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
             "English"
         )
-
+        translate = true
     }
 
 

@@ -4,18 +4,16 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.*
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
+import android.provider.MediaStore.Images.Media.getBitmap
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.bumptech.glide.Glide
@@ -28,6 +26,10 @@ import com.example.imagetranslater.interfaces.TranslatorCallBack
 import com.example.imagetranslater.ui.ActivityLanguages
 import com.example.imagetranslater.ui.translator.ActivityTranslator
 import com.example.imagetranslater.utils.AnNot
+import com.example.imagetranslater.utils.AnNot.Image.FROM_GALLERY
+import com.example.imagetranslater.utils.AnNot.Image.translate
+import com.example.imagetranslater.utils.AnNot.Image.uri
+import com.example.imagetranslater.utils.AnNot.Image.vision
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.LANGUAGE_ONLINE
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.SOURCE_LANGUAGE_SELECTED_CODE_TRANSLATOR
@@ -39,11 +41,10 @@ import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAG
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_NAME_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR
-import com.example.imagetranslater.utils.AnNot.imaeg.FROM_GALLERY
-import com.example.imagetranslater.utils.AnNot.imaeg.uri
-import com.example.imagetranslater.utils.AnNot.imaeg.vision
 import com.example.imagetranslater.utils.AppPreferences.funAddString
 import com.example.imagetranslater.utils.AppPreferences.funGetString
+import com.example.imagetranslater.utils.DrawingConfig
+import com.example.imagetranslater.utils.Singleton.createImage
 import com.example.imagetranslater.utils.Singleton.funCopy
 import com.example.imagetranslater.utils.Singleton.funLaunchLanguagesActivity
 import com.example.imagetranslater.utils.Singleton.shareWithText
@@ -69,6 +70,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
     lateinit var rSB: StringBuilder
     private lateinit var sSB: StringBuilder
     private var textImagePath = String()
+    private var shareImagePath = String()
     private var date = String()
 
     private val vmPinned: VMPinned by viewModels()
@@ -78,6 +80,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
     private lateinit var binding: ActivityImageTranslatorResultBinding
 
     lateinit var scop: CoroutineScope
+//    lateinit var draw: DrawingConfig
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,6 +88,8 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_image_translator_result)
         scop = CoroutineScope(Job())
         onlineTranslatorApi = OnlineTranslatorApi(this)
+
+//        draw = DrawingConfig()
 
         binding.imageViewPin.setOnClickListener {
             val sourceName = funGetString(
@@ -113,6 +118,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                 targetCODE,
                 uri.toString(),
                 textImagePath = textImagePath,
+                shareImagePath,
                 date
             )
             scop.launch(Dispatchers.IO) {
@@ -156,6 +162,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
             startActivity(Intent(this, ActivityCrop::class.java))
         }
         binding.viewMore.texViewTranslateTo.setOnClickListener {
+            translate = true
             funLaunchLanguagesActivity(
                 LANGUAGE_ONLINE,
                 TARGET_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR,
@@ -169,12 +176,13 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
             binding.viewImages.imageView.visibility = View.INVISIBLE
         }
         binding.viewMore.texViewShareImageWithTran.setOnClickListener {
-            binding.viewImages.imageView.visibility = View.VISIBLE
-            shareWithText(binding.zoomLayout)
+            translate = false
+            shareWithText(shareImagePath)
         }
 
 
         binding.imageViewTranslate.setOnClickListener {
+            translate = false
             toTranslateIntent()
         }
         binding.zoomLayout.setOnClickListener {
@@ -263,7 +271,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                 ImageDecoder.createSource(contentResolver, u)
             )
         } else {
-            MediaStore.Images.Media.getBitmap(contentResolver, u)
+            getBitmap(contentResolver, u)
         }
 
         val canvas: Canvas?
@@ -273,6 +281,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
         tempBitmap.setHasAlpha(true)
         tempBitmap.density = DisplayMetrics.DENSITY_HIGH
         canvas = Canvas(tempBitmap)
+ //        draw.setBackground(tempBitmap)
 
         // Break the text into multiple lines and draw each one according to its own bounding box.
         var counter = 1
@@ -300,7 +309,9 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                 textPaint.textSize = currentLine.boundingBox!!.height().toFloat() //set text size
                 val fm = textPaint.fontMetrics
                 textPaint.getFontMetrics(fm)
-
+//                draw.setPaint(paint = textPaint)
+//                draw.setText(DrawingConfig.TextValues(translatedList[counter - 1]) ,true)
+//                draw.draw()
                 try {
                     canvas.drawText(
                         translatedList[counter - 1],
@@ -312,44 +323,11 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
 
                 }
                 counter++
-//                currentLine.elements.forEach {
-//                    val rect = it.boundingBox
-//                    canvas.drawRect(rect!!, rectPaint)
-//
-//                    textPaint.measureText(translatedList[counter - 1])
-//
-//                    textPaint.textSize = it.boundingBox!!.height().toFloat() //set text size
-//                    val fm = textPaint.fontMetrics
-//                    textPaint.getFontMetrics(fm)
-//
-//                    try {
-//                        canvas.drawText(
-//                            translatedList[counter - 1],
-//                            it.boundingBox!!.exactCenterX(),
-//                            it.boundingBox!!.exactCenterY() - (fm.ascent + fm.descent) / 2,
-//                            textPaint
-//                        )
-//                    } catch (e: Exception) {
-//
-//                    }
-//                    counter++
-//                }
-
             }
 
         }
 
-        scop.launch(Dispatchers.Main) {
-            Log.e(
-                "Time",
-                "ocr end: --->${
-                    SimpleDateFormat(
-                        "h:mm ss",
-                        Locale.getDefault()
-                    ).format(System.currentTimeMillis())
-                }"
-            )
-        }
+
         return tempBitmap
     }
 
@@ -452,19 +430,10 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
     }
 
 
+    @SuppressLint("SimpleDateFormat")
     override fun call(result: String, source: String) {
-        scop.launch(Dispatchers.Main) {
-            Log.e(
-                "Time",
-                "call start: --->${
-                    SimpleDateFormat(
-                        "h:mm ss",
-                        Locale.getDefault()
-                    ).format(System.currentTimeMillis())
-                }"
-            )
-        }
-        date = SimpleDateFormat("dd,MMM,yyyy h:mm a").format(System.currentTimeMillis())
+        date =
+            SimpleDateFormat(getString(R.string.dd_MMM_yyyy_h_mm_a)).format(System.currentTimeMillis())
         rSB = StringBuilder()
         if (translatedList.isNotEmpty()) translatedList.clear()
         if (result.isNotEmpty()) {
@@ -474,16 +443,6 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                 array.forEach {
                     rSB.append(it)
                     translatedList.add(it)
-                }
-              launch(Dispatchers.Main){
-                    Log.e(
-                      "Time",
-                        "call end: --->${
-                            SimpleDateFormat("h:mm ss", Locale.getDefault()).format(
-                                System.currentTimeMillis()
-                            )
-                        }"
-                    )
                 }
 
                 val bit = ocr(vision)
@@ -515,9 +474,17 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                     if (alertDialog.isShowing) {
                         alertDialog.dismiss()
                     }
-                    textImagePath = saveImage(bit)
+                    try {
+                        textImagePath = saveImage(bit) // result image
+                        shareImagePath =
+                            createImage(binding.viewImages.clImagesMain)//share able image
+
+                    } catch (e: Exception) {
+                        e.stackTrace
+                    }
 
                     delay(3000)
+
                     val entity = EntityRecent(
                         "$sourceName to $targetName",
                         sSB.toString(),
@@ -526,8 +493,11 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                         targetName,
                         sourceCode,
                         targetCODE,
-                        uri.toString(),
-                        textImagePath, date
+                        imagePath = uri.toString(),
+                        textImagePath,
+                        shareImagePath,
+                        date
+
                     )
                     vmRecent.funInsert(entity)
                 }
@@ -541,15 +511,14 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
     }
 
     private suspend fun saveImage(bm: Bitmap): String = withContext(Dispatchers.IO) {
-        scop.launch(Dispatchers.Main){
-            Log.e(
-                "Time",
-                "saveImage start: --->${SimpleDateFormat("h:mm ss", Locale.getDefault()).format(System.currentTimeMillis())}"
-            )
-        }
-        val n = System.currentTimeMillis()
-        val fName = "Image-$n.png"
-        val file = File(getExternalFilesDir("")!!.absolutePath + fName)
+
+        val time = SimpleDateFormat(
+            "EEE-dd-yyyy h:mm s am",
+            Locale.getDefault()
+        ).format(System.currentTimeMillis())
+
+        val fName = "Image-$time.png"
+        val file = File(getExternalFilesDir("")!!.absolutePath, fName)
         if (file.exists()) file.delete()
         try {
             val out = FileOutputStream(file)
@@ -557,27 +526,13 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
             bm.compress(Bitmap.CompressFormat.PNG, 0, out)
             out.flush()
             out.close()
-            scop.launch(Dispatchers.Main){
-                Log.e(
-                    "Time",
-                    "saveImage end: --->${SimpleDateFormat("h:mm ss", Locale.getDefault()).format(System.currentTimeMillis())}"
-                )
-            }
+
             file.absolutePath
         } catch (e: Exception) {
             e.printStackTrace()
             textImagePath
         }
 
-    }
-
-    private fun uriToDrawable(uri: Uri): Drawable {
-        return try {
-            val inputStream = contentResolver.openInputStream(uri)
-            Drawable.createFromStream(inputStream, uri.toString())
-        } catch (e: Exception) {
-            ContextCompat.getDrawable(this, R.drawable.ic_launcher_background)!!
-        }
     }
 
 
@@ -591,18 +546,28 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
 
     override fun onResume() {
         super.onResume()
-        dialogLoading()
         scop.launch(Dispatchers.IO) {
-            methTakeResult()
+            if (translate) {
+                launch(Dispatchers.Main) {
+                    dialogLoading()
+                }
+                methTakeResult()
+                translate = false
+            }
             this.cancel()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (alertDialog.isShowing) {
-            alertDialog.dismiss()
+        try {
+            if (alertDialog.isShowing) {
+                alertDialog.dismiss()
+            }
+        } catch (e: Exception) {
+            e.stackTrace
         }
+
     }
 
 

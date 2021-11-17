@@ -127,4 +127,5 @@
     <string name="pref_key_segmentation_raw_size_mask" translatable="false">srsm</string>
     <string name="blue">blue</string>
     <string name="red">red</string>
+    <string name="dd_MMM_yyyy_h_mm_a">"dd,MMM,yyyy h:mm a"</string>
 </resources>

@@ -12,8 +12,9 @@ import com.example.imagetranslater.adapter.ViewPagerAdapter
 import com.example.imagetranslater.databinding.ActivityMainBinding
 import com.example.imagetranslater.ui.imageTranslator.ActivityImageTranslator
 import com.example.imagetranslater.ui.imageTranslator.ActivityImageTranslatorResult
-import com.example.imagetranslater.utils.AnNot.imaeg.FROM_GALLERY
-import com.example.imagetranslater.utils.AnNot.imaeg.uri
+import com.example.imagetranslater.utils.AnNot.Image.FROM_GALLERY
+import com.example.imagetranslater.utils.AnNot.Image.translate
+import com.example.imagetranslater.utils.AnNot.Image.uri
 import com.example.imagetranslater.viewmodel.VMPinned
 import com.example.imagetranslater.viewmodel.VMRecent
 import com.google.android.material.tabs.TabLayoutMediator
@@ -34,6 +35,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, ActivityImageTranslator::class.java))
         }
         binding.imageFromGallery.setOnClickListener {
+            translate =true
             val photoPickerIntent = Intent(Intent.ACTION_PICK)
             photoPickerIntent.type = "image/*"
             intentLauncher.launch(photoPickerIntent)

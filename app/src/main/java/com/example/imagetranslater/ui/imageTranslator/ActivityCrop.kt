@@ -1,16 +1,14 @@
 package com.example.imagetranslater.ui.imageTranslator
 
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import androidx.annotation.Nullable
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.databinding.DataBindingUtil
 import com.example.imagetranslater.R
 import com.example.imagetranslater.databinding.ActivityCropBinding
-import com.example.imagetranslater.utils.AnNot.imaeg.uri
-import com.theartofdev.edmodo.cropper.CropImage
+import com.example.imagetranslater.utils.AnNot.Image.translate
+import com.example.imagetranslater.utils.AnNot.Image.uri
 import com.theartofdev.edmodo.cropper.CropImageView
 import java.io.File
 import java.io.FileOutputStream
@@ -22,9 +20,7 @@ class ActivityCrop : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        setContentView(R.layout.activity_crop)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_crop)
-
 
         imageViewCropped = findViewById(R.id.cropImageView)
 
@@ -36,14 +32,14 @@ class ActivityCrop : AppCompatActivity() {
         imageViewCropped.setOnCropImageCompleteListener { _, result ->
             if (result.isSuccessful) {
                 saveImage(result.bitmap)
+                translate = true
                 finish()
-            } else {
-
             }
         }
         binding.textViewRotate.setOnClickListener {
             imageViewCropped.rotateImage(90)
         }
+
 
     }
 
@@ -65,15 +61,6 @@ class ActivityCrop : AppCompatActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, @Nullable data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            val result = CropImage.getActivityResult(data)
-            if (resultCode == RESULT_OK) {
-                val resultUri = result.uri
-//                imageViewCropped.setImageURI(resultUri)
-            }
-        }
-    }
+
 
 }

@@ -1,26 +1,28 @@
 package com.example.imagetranslater.ui
 
-import android.content.ContentResolver
 import android.content.Intent
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.bumptech.glide.Glide
 import com.example.imagetranslater.R
 import com.example.imagetranslater.databinding.ActivityViewImageBinding
 import com.example.imagetranslater.datasource.pinned.EntityPinned
+import com.example.imagetranslater.ui.imageTranslator.ActivityImageTranslatorResult
 import com.example.imagetranslater.ui.translator.ActivityTranslator
+import com.example.imagetranslater.utils.AnNot
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.DATE
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.ID
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.IMAGE_ORIGINAL
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.IMAGE_RESULT
+import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SHARE_IMAGE_RESULT
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_LANGUAGE_CODE
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_LANGUAGE_NAME
 import com.example.imagetranslater.utils.AnNot.ObjIntentKeys.SOURCE_TEXT
@@ -35,20 +37,20 @@ import com.example.imagetranslater.utils.AnNot.ObjRoomItems.RECENT
 import com.example.imagetranslater.utils.AnNot.ObjRoomItems.TYPE
 import com.example.imagetranslater.utils.AppPreferences.funAddString
 import com.example.imagetranslater.utils.Singleton.funCopy
+import com.example.imagetranslater.utils.Singleton.funLaunchLanguagesActivity
 import com.example.imagetranslater.utils.Singleton.shareWithText
-import com.example.imagetranslater.utils.Singleton.toastShort
 import com.example.imagetranslater.viewmodel.VMPinned
 import com.example.imagetranslater.viewmodel.VMRecent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
-import java.io.IOException
 
 
 class ActivityViewImage : AppCompatActivity() {
     lateinit var imageOriginal: String
     lateinit var imageResult: String
+    lateinit var shareImagePath: String
     lateinit var sourceText: String
     lateinit var text: String
     lateinit var sourceLanguageCode: String
@@ -59,15 +61,20 @@ class ActivityViewImage : AppCompatActivity() {
 
     lateinit var binding: ActivityViewImageBinding
 
+    companion object {
+        @JvmStatic
+        var translateTo = false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_view_image)
-
 
         val type = intent.extras!![TYPE].toString()
         val id = intent.extras!![ID].toString().toInt()
         imageOriginal = intent.extras!![IMAGE_ORIGINAL].toString()
         imageResult = intent.extras!![IMAGE_RESULT].toString()
+        shareImagePath = intent.extras!![SHARE_IMAGE_RESULT].toString()
         sourceText = intent.extras!![SOURCE_TEXT].toString()
         text = intent.extras!![TEXT].toString()
         sourceLanguageCode = intent.extras!![SOURCE_LANGUAGE_NAME].toString()
@@ -100,6 +107,7 @@ class ActivityViewImage : AppCompatActivity() {
                 targetLanguageName,
                 imageOriginal,
                 textImagePath = imageResult,
+                shareImagePath,
                 date
             )
             CoroutineScope(Dispatchers.IO).launch {
@@ -143,15 +151,23 @@ class ActivityViewImage : AppCompatActivity() {
         binding.viewMore.texViewShowOriginalImage.visibility = View.GONE
 
         binding.viewMore.texViewTranslateTo.setOnClickListener {
-            toTranslateIntent()
+            translateTo = true
+            funLaunchLanguagesActivity(
+                AnNot.ObjIntentKeys.LANGUAGE_ONLINE,
+                AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR,
+                AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR,
+                AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
+                AnNot.ObjPreferencesKeys.TARGET_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
+                ActivityLanguages()
+            )
         }
         binding.imageViewTranslate.setOnClickListener {
             toTranslateIntent()
         }
 
         binding.viewMore.texViewShareImageWithTran.setOnClickListener {
-            binding.includedImages.imageView.visibility = View.VISIBLE
-            shareWithText(binding.zoomLayout)
+            Log.e("share_image", "share_image=========> $shareImagePath")
+            shareWithText(shareImagePath)
         }
 
         binding.includedImages.imageView.setOnClickListener { viewVisibility(binding.includedImages.imageView) }
@@ -169,36 +185,25 @@ class ActivityViewImage : AppCompatActivity() {
         }
 
         binding.imageViewDelete.setOnClickListener {
-//            File(imageOriginal).delete()
+            val image = imageOriginal.substring(7, imageOriginal.lastIndex + 1)
+            Log.e("File", "File=============>$image")
+            Log.e("File", "File=============>$imageResult")
             if (type == RECENT) {
                 vmRecent.funDelete(id)
             } else {
                 vmPinned.funDelete(id)
             }
-            val file = File(imageOriginal)
-            if (!file.delete()) {
-                toastShort("not deleted")
-                if (file.exists()) {
-                    if (!file.canonicalFile.delete()) {
-                        toastShort("not deleted")
-                        if (file.exists()) {
-                            if (!applicationContext.deleteFile(file.name)) {
-                                toastShort("not deleted")
-                            } else {
-                                toastShort("deleted3 : $imageOriginal")
-                            }
-                        }
-                    } else {
-                        toastShort("deleted2 : $imageOriginal")
-                    }
-                }
-            } else {
-                toastShort("deleted1 : $imageOriginal")
-            }
+            //oFile = Original File
+            val oFile = File(image)
+            if (oFile.exists()) oFile.delete()
 
-            deleteFileFromMediaStore(contentResolver, file)
+            //rFile = Result File
+            val rFile = File(imageResult)
+            if (rFile.exists()) rFile.delete()
 
-
+            //sFile = share File
+            val sFile = File(shareImagePath)
+            if (sFile.exists()) sFile.delete()
             finish()
         }
 
@@ -225,29 +230,17 @@ class ActivityViewImage : AppCompatActivity() {
         funAddString(TARGET_LANGUAGE_SELECTED_CODE_TRANSLATOR, targetLanguageCode)
     }
 
-    private fun deleteFileFromMediaStore(contentResolver: ContentResolver, file: File) {
-        val sdk = Build.VERSION.SDK_INT
-        if (sdk >= Build.VERSION_CODES.HONEYCOMB) {
-            val canonicalPath: String = try {
-                file.canonicalPath
-            } catch (e: IOException) {
-                file.absolutePath
-            }
-            val uri = MediaStore.Files.getContentUri("external")
-            val result = contentResolver.delete(
-                uri,
-                MediaStore.Files.FileColumns.DATA + "=?", arrayOf(canonicalPath)
-            )
-            if (result == 0) {
-                val absolutePath = file.absolutePath
-                if (absolutePath != canonicalPath) {
-                    contentResolver.delete(
-                        uri,
-                        MediaStore.Files.FileColumns.DATA + "=?", arrayOf(absolutePath)
-                    )
-                }
-            }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (translateTo) {
+            AnNot.Image.uri = imageOriginal.toUri()
+            startActivity(Intent(this, ActivityImageTranslatorResult::class.java))
+            translateTo = false
+            finish()
         }
+
     }
 
 }

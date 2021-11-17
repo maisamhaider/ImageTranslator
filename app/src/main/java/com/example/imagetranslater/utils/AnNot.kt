@@ -1,26 +1,18 @@
 package com.example.imagetranslater.utils
 
-import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
-import android.provider.Telephony
 import com.example.imagetranslater.model.ModelLanguage
 import com.google.mlkit.vision.text.Text
 import java.util.*
-import kotlin.collections.HashMap
 
 annotation class AnNot {
 
 
-    object imaeg {
-
+    object Image {
         lateinit var uri: Uri
-        lateinit var bitmap: Bitmap
         lateinit var vision: Text
         var FROM_GALLERY = false
-
-        var cropClick = false
-
+        var translate = true
     }
 
     object ObjRoomItems {
@@ -38,15 +30,13 @@ annotation class AnNot {
         const val WHICH_LANGUAGE_CODE = "WHICH_LANGUAGE_CODE"
         const val WHICH_LANGUAGE_NAME = "WHICH_LANGUAGE"
         const val WHICH_RECENT_LANGUAGE = "WHICH_RECENT_LANGUAGE"
-        const val WHICH_RECENT_LANGUAGE_LIST = "WHICH_RECENT_LANGUAGE_LIST"
         const val WHICH_RECENT_LANGUAGE_CODE_LIST = "WHICH_RECENT_LANGUAGE_CODE_LIST"
 
-        const val TEXT_SOURCE = "TEXT_SOURCE"
 
         const val ID = "ID"
-        const val IMAGE_URI = "IMAGE_URI"
         const val IMAGE_ORIGINAL = "IMAGE_ORIGINAL"
         const val IMAGE_RESULT = "IMAGE_RESULT"
+        const val SHARE_IMAGE_RESULT = "SHARE_IMAGE_RESULT"
         const val SOURCE_TEXT = "SOURCE_TEXT"
         const val TEXT = "TEXT"
         const val SOURCE_LANGUAGE_NAME = "SOURCE_LANGUAGE_NAME"
@@ -57,7 +47,6 @@ annotation class AnNot {
 
 
         const val LANGUAGE_ONLINE = "LANGUAGE_ONLINE"
-        const val LANGUAGE_OFFLINE = "LANGUAGE_OFFLINE"
         const val LANGUAGE_CAMERA_SUPPORTED = "LANGUAGE_CAMERA_SUPPORTED"
 
 
@@ -65,9 +54,6 @@ annotation class AnNot {
 
     object ObjNames {
         const val APP_PREFERENCES = "APP_PREFERENCES"
-        const val SOURCE_LANGUAGE = "SOURCE_LANGUAGE"
-        const val TARGET_LANGUAGE = "TARGET_LANGUAGE"
-
     }
 
 
@@ -75,9 +61,7 @@ annotation class AnNot {
 
         const val SOURCE_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR =
             "SOURCE_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR"
-        const val SOURCE_RECENT_LANGUAGES_IMAGE_TRANSLATOR =
-            "SOURCE_RECENT_LANGUAGES_IMAGE_TRANSLATOR"
-        const val SOURCE_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR =
+         const val SOURCE_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR =
             "SOURCE_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR"
         const val SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR =
             "SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR"
@@ -86,8 +70,7 @@ annotation class AnNot {
 
         const val TARGET_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR =
             "TARGET_RECENT_LANGUAGES_CODE_IMAGE_TRANSLATOR"
-        const val TARGET_RECENT_LANGUAGES_IMAGE_TRANSLATOR =
-            "TARGET_RECENT_LANGUAGES_IMAGE_TRANSLATOR"
+
         const val TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR =
             "TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR"
         const val TARGET_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR =
@@ -97,8 +80,6 @@ annotation class AnNot {
 
         const val SOURCE_RECENT_LANGUAGES_CODE_TRANSLATOR =
             "SOURCE_RECENT_LANGUAGES_CODE_TRANSLATOR"
-        const val SOURCE_RECENT_LANGUAGES_TRANSLATOR =
-            "SOURCE_RECENT_LANGUAGES_TRANSLATOR"
         const val SOURCE_RECENT_LANGUAGE_SELECTED_TRANSLATOR =
             "SOURCE_RECENT_LANGUAGE_SELECTED_TRANSLATOR"
         const val SOURCE_LANGUAGE_SELECTED_CODE_TRANSLATOR =
@@ -108,19 +89,12 @@ annotation class AnNot {
 
         const val TARGET_RECENT_LANGUAGES_CODE_TRANSLATOR =
             "TARGET_RECENT_LANGUAGES_CODE_TRANSLATOR"
-        const val TARGET_RECENT_LANGUAGES_TRANSLATOR =
-            "TARGET_RECENT_LANGUAGES_TRANSLATOR"
-        const val TARGET_RECENT_LANGUAGE_SELECTED_TRANSLATOR =
+         const val TARGET_RECENT_LANGUAGE_SELECTED_TRANSLATOR =
             "TARGET_RECENT_LANGUAGE_SELECTED_TRANSLATOR"
         const val TARGET_LANGUAGE_SELECTED_CODE_TRANSLATOR =
             "TARGET_LANGUAGE_SELECTED_CODE_TRANSLATOR"
         const val TARGET_LANGUAGE_SELECTED_NAME_TRANSLATOR =
             "TARGET_LANGUAGE_SELECTED_NAME_TRANSLATOR"
-
-
-        const val AUTO_SPEAK_TEXT_TO_SPEECH =
-            "AUTO_SPEAK_TEXT_TO_SPEECH"
-
 
     }
 
@@ -193,18 +167,6 @@ annotation class AnNot {
             "Vietnamese"
         )
 
-        fun appPackages(context: Context): HashMap<String, String> {
-            val apps = HashMap<String, String>()
-            return apps.apply {
-                set("WhatsApp", "com.whatsapp")
-                set("Messenger ", "com.facebook.orca")
-                set("Twitter", "com.twitter.android")
-                set("imo", "com.imo.android.imoim")
-                set("Hangouts", "com.google.android.talk")
-                set("Messages", Telephony.Sms.getDefaultSmsPackage(context))
-                set("Gmail", "com.google.android.gm")
-            }
-        }
 
         private val LANGUAGES_NAMES_ONLINE = listOf(
             "Afrikaans",
@@ -320,7 +282,7 @@ annotation class AnNot {
         fun funGetLanguagesListOffline(): MutableList<ModelLanguage> {
             var model: ModelLanguage?
             val list: MutableList<ModelLanguage> = ArrayList()
-            var i = 0;
+            var i = 0
             LANGUAGES_CODES.forEach {
                 model = ModelLanguage(it, LANGUAGES_NAMES[i])
                 list.add(model!!)
@@ -345,7 +307,7 @@ annotation class AnNot {
         fun funGetLanguagesListCameraSupported(): MutableList<ModelLanguage> {
             var model: ModelLanguage?
             val list: MutableList<ModelLanguage> = ArrayList()
-            var i = 0;
+            var i = 0
             LANGUAGES_CODES_CAMERA_SUPPORTED.forEach {
                 model = ModelLanguage(it, LANGUAGES_NAMES_CAMERA_SUPPORTED[i])
                 list.add(model!!)
