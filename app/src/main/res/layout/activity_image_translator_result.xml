@@ -48,6 +48,35 @@
 
         </com.otaliastudios.zoom.ZoomLayout>
 
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clRecordSave"
+            android:layout_width="wrap_content"
+            android:visibility="gone"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/imageViewCopy"
+            app:layout_constraintEnd_toStartOf="@+id/imageViewCopy"
+            app:layout_constraintStart_toEndOf="@+id/imageViewCrop"
+            app:layout_constraintTop_toTopOf="@+id/guideline6">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/mTextViewDataSaving"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="record saving"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                app:layout_constraintBottom_toBottomOf="@+id/mTextViewDataSaving"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/mTextViewDataSaving"
+                app:layout_constraintTop_toTopOf="@+id/mTextViewDataSaving" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/imageViewVisibility"
             android:layout_width="wrap_content"

@@ -25,10 +25,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ImageTranslater">
         <activity
+            android:screenOrientation="portrait"
             android:name=".ui.translator.ActivityTranslator"
             android:exported="false" />
 
         <activity
+            android:screenOrientation="portrait"
             android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
@@ -38,21 +40,27 @@
             </intent-filter>
         </activity>
         <activity
+            android:screenOrientation="portrait"
             android:name=".ui.ActivityViewImage"
             android:exported="true" />
         <activity
+            android:screenOrientation="portrait"
             android:name=".ui.imageTranslator.ActivityCrop"
             android:exported="true" />
         <activity
+            android:screenOrientation="portrait"
             android:name=".ui.imageTranslator.ActivityImageTranslatorResult"
             android:exported="true" />
         <activity
+            android:screenOrientation="portrait"
             android:name=".ui.ActivityLanguages"
             android:exported="true" />
         <activity
+            android:screenOrientation="portrait"
             android:name=".ui.imageTranslator.ActivityImageTranslator"
             android:exported="true" />
         <activity
+            android:screenOrientation="portrait"
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" /> <!-- Declares the input method service -->
         <meta-data

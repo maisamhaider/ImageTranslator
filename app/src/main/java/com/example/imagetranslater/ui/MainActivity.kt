@@ -27,7 +27,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
 
@@ -35,7 +34,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, ActivityImageTranslator::class.java))
         }
         binding.imageFromGallery.setOnClickListener {
-            translate =true
+            translate = true
             val photoPickerIntent = Intent(Intent.ACTION_PICK)
             photoPickerIntent.type = "image/*"
             intentLauncher.launch(photoPickerIntent)

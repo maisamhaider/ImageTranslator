@@ -5,11 +5,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.*
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore.Images.Media.getBitmap
-import android.util.DisplayMetrics
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -43,7 +39,7 @@ import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_
 import com.example.imagetranslater.utils.AnNot.ObjPreferencesKeys.TARGET_RECENT_LANGUAGE_SELECTED_IMAGE_TRANSLATOR
 import com.example.imagetranslater.utils.AppPreferences.funAddString
 import com.example.imagetranslater.utils.AppPreferences.funGetString
-import com.example.imagetranslater.utils.DrawingConfig
+import com.example.imagetranslater.utils.OCR
 import com.example.imagetranslater.utils.Singleton.createImage
 import com.example.imagetranslater.utils.Singleton.funCopy
 import com.example.imagetranslater.utils.Singleton.funLaunchLanguagesActivity
@@ -51,8 +47,8 @@ import com.example.imagetranslater.utils.Singleton.shareWithText
 import com.example.imagetranslater.utils.Singleton.toastLong
 import com.example.imagetranslater.viewmodel.VMPinned
 import com.example.imagetranslater.viewmodel.VMRecent
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.*
@@ -243,106 +239,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
     }
 
 
-    private fun ocr(text: Text): Bitmap {
-        scop.launch(Dispatchers.Main) {
-            Log.e(
-                "Time",
-                "ocr start: --->${
-                    SimpleDateFormat(
-                        "h:mm ss",
-                        Locale.getDefault()
-                    ).format(System.currentTimeMillis())
-                }"
-            )
-        }
-        val u: Uri = if (!FROM_GALLERY) {
-            if (!uri.path!!.contains("file:///")) {
-                Uri.fromFile(File(uri.path.toString()))
-            } else {
-                uri
-            }
-        } else {
-            uri
-        }
-        FROM_GALLERY = false
-
-        val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            ImageDecoder.decodeBitmap(
-                ImageDecoder.createSource(contentResolver, u)
-            )
-        } else {
-            getBitmap(contentResolver, u)
-        }
-
-        val canvas: Canvas?
-        val tempBitmap: Bitmap =
-            Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
-
-        tempBitmap.setHasAlpha(true)
-        tempBitmap.density = DisplayMetrics.DENSITY_HIGH
-        canvas = Canvas(tempBitmap)
- //        draw.setBackground(tempBitmap)
-
-        // Break the text into multiple lines and draw each one according to its own bounding box.
-        var counter = 1
-        val textPaint = Paint()
-
-        val rectPaint = Paint()
-        textPaint.color = Color.BLACK
-        textPaint.typeface = Typeface.MONOSPACE
-        textPaint.textScaleX = 0.5f
-        textPaint.textAlign = Paint.Align.CENTER
-
-
-        rectPaint.style = Paint.Style.FILL
-        rectPaint.color = Color.WHITE
-
-        text.textBlocks.forEach { textBlock ->
-            val textLines: MutableList<Text.Line> = textBlock.lines
-            textLines.forEach { currentLine ->
-
-                val rect = currentLine.boundingBox
-                canvas.drawRect(rect!!, rectPaint)
-
-                textPaint.measureText(translatedList[counter - 1])
-
-                textPaint.textSize = currentLine.boundingBox!!.height().toFloat() //set text size
-                val fm = textPaint.fontMetrics
-                textPaint.getFontMetrics(fm)
-//                draw.setPaint(paint = textPaint)
-//                draw.setText(DrawingConfig.TextValues(translatedList[counter - 1]) ,true)
-//                draw.draw()
-                try {
-                    canvas.drawText(
-                        translatedList[counter - 1],
-                        currentLine.boundingBox!!.exactCenterX(),
-                        currentLine.boundingBox!!.exactCenterY() - (fm.ascent + fm.descent) / 2,
-                        textPaint
-                    )
-                } catch (e: Exception) {
-
-                }
-                counter++
-            }
-
-        }
-
-
-        return tempBitmap
-    }
-
     private fun methTakeResult() {
-        scop.launch(Dispatchers.Main) {
-            Log.e(
-                "Time",
-                "methTakeResult start: --->${
-                    SimpleDateFormat(
-                        "h:mm ss",
-                        Locale.getDefault()
-                    ).format(System.currentTimeMillis())
-                }"
-            )
-        }
         val source = funGetString(
             SOURCE_LANGUAGE_SELECTED_CODE_IMAGE_TRANSLATOR,
             "en"
@@ -395,36 +292,31 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                                 this@ActivityImageTranslatorResult
                             )
                         }
-                        scop.launch(Dispatchers.Main) {
-                            Log.e(
-                                "Time",
-                                "methTakeResult end: --->${
-                                    SimpleDateFormat(
-                                        "h:mm ss",
-                                        Locale.getDefault()
-                                    ).format(System.currentTimeMillis())
-                                }"
-                            )
-                        }
                     } else {
+
+
+                    }
+
+                } else {
+                    scop.launch(Dispatchers.Main)
+                    {
                         toastLong("No text found")
                         if (alertDialog.isShowing) {
                             alertDialog.dismiss()
                         }
                     }
 
-                } else {
-                    toastLong("No text found")
+                }
+
+            }.addOnFailureListener {
+                scop.launch(Dispatchers.Main)
+                {
+                    toastLong("Failed to recognized text")
                     if (alertDialog.isShowing) {
                         alertDialog.dismiss()
                     }
                 }
 
-            }.addOnFailureListener {
-                toastLong("Failed to recognized text")
-                if (alertDialog.isShowing) {
-                    alertDialog.dismiss()
-                }
             }
 
     }
@@ -445,7 +337,7 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                     translatedList.add(it)
                 }
 
-                val bit = ocr(vision)
+                val bit = OCR().runOcr(this@ActivityImageTranslatorResult, vision, translatedList)
 
                 val sourceName = funGetString(
                     SOURCE_LANGUAGE_SELECTED_NAME_IMAGE_TRANSLATOR,
@@ -465,16 +357,18 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
                 )
                 scop.launch(Dispatchers.Main) {
                     try {
+                        binding.clRecordSave.visibility = View.VISIBLE
                         binding.viewImages.imageView.visibility = View.VISIBLE
                         Glide.with(this@ActivityImageTranslatorResult).load(bit)
                             .into(binding.viewImages.imageView)
                     } catch (e: Exception) {
                         e.stackTrace
                     }
-                    if (alertDialog.isShowing) {
-                        alertDialog.dismiss()
-                    }
+
                     try {
+                        if (alertDialog.isShowing) {
+                            alertDialog.dismiss()
+                        }
                         textImagePath = saveImage(bit) // result image
                         shareImagePath =
                             createImage(binding.viewImages.clImagesMain)//share able image
@@ -500,6 +394,11 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
 
                     )
                     vmRecent.funInsert(entity)
+
+                    binding.mTextViewDataSaving.text = getString(R.string.saved)
+                    delay(2000)
+
+                    binding.clRecordSave.visibility = View.GONE
                 }
 
 
@@ -538,7 +437,8 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
 
     private fun dialogLoading() {
         val builder = AlertDialog.Builder(this)
-            .setTitle("Loading").setMessage("Wait a moment.Please").setCancelable(false)
+            .setTitle(getString(R.string.loading))
+            .setMessage(getString(R.string.wait_a_moment_please)).setCancelable(false)
 
         alertDialog = builder.create()
         alertDialog.show()
@@ -548,10 +448,11 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
         super.onResume()
         scop.launch(Dispatchers.IO) {
             if (translate) {
-                launch(Dispatchers.Main) {
+                scop.launch(Dispatchers.Main) {
                     dialogLoading()
                 }
                 methTakeResult()
+
                 translate = false
             }
             this.cancel()
@@ -568,6 +469,22 @@ class ActivityImageTranslatorResult : AppCompatActivity(), TranslatorCallBack {
             e.stackTrace
         }
 
+
+    }
+
+    override fun onBackPressed() {
+        if (binding.clRecordSave.isVisible) {
+            MaterialAlertDialogBuilder(this).setTitle(getString(R.string.alert))
+                .setMessage(getString(R.string.history_is_saving))
+                .setPositiveButton(getString(R.string.back)) { dialog, _ ->
+                    run {
+                        dialog.cancel()
+                        finish()
+                    }
+                }.setNegativeButton(
+                    getString(R.string.wait)
+                ) { dialog, _ -> dialog.cancel() }.show()
+        } else super.onBackPressed()
     }
 
 
