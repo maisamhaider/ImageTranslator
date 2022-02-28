@@ -107,8 +107,7 @@ class ActivityImageTranslator : AppCompatActivity(), LifecycleOwner {
         }
     }
 
-    private val intentLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    private val intentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 
             if (result.resultCode == RESULT_OK && result.data!!.data != null) {
                 val chosenImage = result.data!!.data

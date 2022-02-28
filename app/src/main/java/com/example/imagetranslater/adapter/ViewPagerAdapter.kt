@@ -28,8 +28,7 @@ class ViewPagerAdapter(
     val context: Context,
     private val vmRecent: VMRecent,
     private val vmPinned: VMPinned
-) :
-    RecyclerView.Adapter<ViewPagerAdapter.MyViewHolder>(), DeleteCallBack {
+) : RecyclerView.Adapter<ViewPagerAdapter.MyViewHolder>(), DeleteCallBack {
 
     val list = mutableListOf("Recent", "Pinned")
     var item = -1
@@ -141,6 +140,7 @@ class ViewPagerAdapter(
             }
         )
         val scope = CoroutineScope(Dispatchers.IO)
+
         if (isRecent) {
             scope.launch {
                 val listRecent = vmRecent.funGetAll()
